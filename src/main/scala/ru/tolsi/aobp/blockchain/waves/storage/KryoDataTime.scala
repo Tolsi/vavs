@@ -4,6 +4,7 @@ import java.nio.ByteBuffer
 
 import org.h2.mvstore.WriteBuffer
 import org.h2.mvstore.`type`.DataType
+import ru.tolsi.aobp.blockchain.waves.binary.WavesKryoInstantiator
 
 import scala.reflect.ClassTag
 

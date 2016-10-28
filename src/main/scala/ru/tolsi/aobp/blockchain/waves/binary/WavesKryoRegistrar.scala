@@ -5,7 +5,7 @@ import java.net.InetSocketAddress
 import com.esotericsoftware.kryo.Kryo
 import com.twitter.chill.IKryoRegistrar
 import ru.tolsi.aobp.blockchain.base.{Signature32, Signature64, Signed, Transaction}
-import ru.tolsi.aobp.blockchain.waves.{WavesPublicKeyAccount$, WavesBlockChain, WavesTransaction}
+import ru.tolsi.aobp.blockchain.waves.{WavesAccount$, WavesBlockChain, WavesTransaction}
 import ru.tolsi.aobp.blockchain.waves.binary.serializers._
 
 class WavesKryoRegistrar extends IKryoRegistrar {
@@ -29,7 +29,7 @@ class WavesKryoRegistrar extends IKryoRegistrar {
     k.register(classOf[GenesisTransactionV1], new GenesisTransactionV1Serializer)
     k.register(classOf[PaymentTransactionV1], new PaymentTransactionV1Serializer)
     k.register(classOf[PublicKeyAccount], new PublicKeyAccountSerializer)
-    k.register(classOf[WavesPublicKeyAccount], new AccountSerializer)
+    k.register(classOf[WavesAccount], new AccountSerializer)
     k.register(classOf[Signed[WavesTransaction, Signature64]], new SignedTransactionSerializer)
     k.register(classOf[Signature64], new Signature64Serializer)
     k.register(classOf[Signature32], new Signature32Serializer)

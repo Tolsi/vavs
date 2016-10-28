@@ -1,23 +1,23 @@
 package ru.tolsi.aobp.blockchain.base
 
 import rx.Observable
-import scorex.crypto.hash.CryptographicHash
 
 trait Signable
 
-sealed trait Signature
+sealed trait Signature[V]
 
-class Signature32 extends Signature
-class Signature64 extends Signature
+class Signature32[V](value: V) extends Signature[V]
+
+class Signature64[V](value: V) extends Signature[V]
 
 sealed trait Validable
 
 sealed trait ValidationError[V <: Validable]
 
-case class Signed[T <: Signable, S <: Signature](value: T, signature: S)
+case class Signed[T <: Signable, V, S <: Signature[V]](value: T, signature: S)
 
-abstract class Block[BC <: BlockChain[T,Block[BC, T]], T <: Transaction[BC]](id: Block[BC, T]#Id, timestamp: Long) extends Validable with Signable {
-  type Id = Array[Byte]
+abstract class Block[BC <: BlockChain[T, Block[BC, T]], T <: Transaction[BC]] extends Validable with Signable {
+  type Id <: Ordered[Id]
 }
 
 sealed trait ProtocolRequest
@@ -32,7 +32,7 @@ abstract class BlockGenerator[BC <: BlockChain[_,_], T <: Transaction[BC], B <: 
 
 sealed trait TransactionValidationError[BC <: BlockChain[_,_], T <: Transaction[BC]] extends ValidationError[T]
 
-class AggregatedValidatorOnBlockchain[V <: Validable, VE <: ValidationError[V], T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]](validators: Seq[ValidatorOnBlockChain[V, T, VE, B, BC]]) extends ValidatorOnBlockChain[V, T, VE, B, BC] {
+abstract class AggregatedValidatorOnBlockchain[V <: Validable, VE <: ValidationError[V], T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]](validators: Seq[ValidatorOnBlockChain[V, T, VE, B, BC]]) extends ValidatorOnBlockChain[V, T, VE, B, BC] {
   // http://stackoverflow.com/questions/7230999/how-to-reduce-a-seqeithera-b-to-a-eithera-seqb
   private def sequence[A, B](s: Seq[Either[A, B]]): Either[Seq[A], B] =
     s.foldRight(Left(Nil): Either[List[A], B]) {
@@ -59,7 +59,7 @@ abstract class ValidatorOnBlockChain[V <: Validable, T <: Transaction[BC], E <: 
 abstract class BlockStorage[T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]] {
   def put(block: B): Unit
 
-  def get(id: B#Id): B
+  def get(id: B#Id): Option[B]
 
   def contains(id: B#Id): Boolean
 }
@@ -70,6 +70,20 @@ abstract class UnconfirmedTransactionStorage[T <: Transaction[BC], BC <: BlockCh
   def all: Seq[T]
 
   def remove(tx: T): Option[T]
+}
+
+abstract class StateStorage[T <: Transaction[BlockChain[T, B]], B <: Block[BlockChain[T, B], T],
+BA <: StateStorage[T, B, BA]#BalanceAccount] {
+  type BalanceAccount
+  type Balance = Long
+
+  def currentState: Map[BA, Balance]
+
+  def currentBalance(balanceAccount: BalanceAccount): Balance
+
+  def apply(b: B): Unit
+
+  def rollback(b: B): Unit
 }
 
 abstract class AccountWithAddress[BC <: BlockChain[_,_]](address: String)
@@ -94,17 +108,9 @@ trait BlockChainApp[B <: Block[BC, T], T <: Transaction[BC], BC <: BlockChain[B,
 
   def wallet: Wallet[BC]
 
-  def storage: BlockStorage[T, B, BC]
-
   def utx: UnconfirmedTransactionStorage[T, BC]
 
   def miner: BlockGenerator[BC, T, B]
-
-  def hashes: Seq[CryptographicHash]
-
-  def txValidator: AggregatedValidatorOnBlockchain[T, TransactionValidationError[BC, T], T, B, this.type]
-
-  def blockValidator: AggregatedValidatorOnBlockchain[B, BlockValidatorError[T, B, BC], T, B, this.type]
 }
 
 trait IncomingNetworkLayer[T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]] {
