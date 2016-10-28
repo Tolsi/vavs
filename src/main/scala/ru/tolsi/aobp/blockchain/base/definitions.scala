@@ -3,26 +3,36 @@ package ru.tolsi.aobp.blockchain.base
 import rx.Observable
 import scorex.crypto.hash.CryptographicHash
 
+trait Signable
+
+sealed trait Signature
+
+class Signature32 extends Signature
+class Signature64 extends Signature
+
 sealed trait Validable
 
 sealed trait ValidationError[V <: Validable]
 
-abstract class Block(id: Block#Id) extends Validable {
+case class Signed[T <: Signable, S <: Signature](value: T, signature: S)
+
+abstract class Block[BC <: BlockChain[T,Block[BC, T]], T <: Transaction[BC]](id: Block[BC, T]#Id, timestamp: Long) extends Validable with Signable {
   type Id = Array[Byte]
 }
 
 sealed trait ProtocolRequest
-abstract class Transaction(id: Transaction#Id) extends Validable {
+
+abstract class Transaction[BC <: BlockChain[_,_]](id: Transaction[BC]#Id, timestamp: Long, amount: Long, fee: Long) extends Validable with Signable {
   type Id = Array[Byte]
 }
 
-abstract class BlockGenerator[B <: Block] {
+abstract class BlockGenerator[BC <: BlockChain[_,_], T <: Transaction[BC], B <: Block[BC, T]] {
   def blocks: Observable[B]
 }
 
-sealed trait TransactionValidationError[T <: Transaction] extends ValidationError[T]
+sealed trait TransactionValidationError[BC <: BlockChain[_,_], T <: Transaction[BC]] extends ValidationError[T]
 
-class AggregatedValidatorOnBlockchain[V <: Validable, VE <: ValidationError[V], T <: Transaction, B <: Block, BC <: BlockChain[B, T]](validators: Seq[ValidatorOnBlockChain[V, T, VE, B, BC]]) extends ValidatorOnBlockChain[V, T, VE, B, BC] {
+class AggregatedValidatorOnBlockchain[V <: Validable, VE <: ValidationError[V], T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]](validators: Seq[ValidatorOnBlockChain[V, T, VE, B, BC]]) extends ValidatorOnBlockChain[V, T, VE, B, BC] {
   // http://stackoverflow.com/questions/7230999/how-to-reduce-a-seqeithera-b-to-a-eithera-seqb
   private def sequence[A, B](s: Seq[Either[A, B]]): Either[Seq[A], B] =
     s.foldRight(Left(Nil): Either[List[A], B]) {
@@ -35,26 +45,26 @@ class AggregatedValidatorOnBlockchain[V <: Validable, VE <: ValidationError[V], 
   }
 }
 
-abstract class TransactionValidator[T <: Transaction, B <: Block, BC <: BlockChain[B, T]] extends ValidatorOnBlockChain[T, T, TransactionValidationError[T], B, BC]
+abstract class TransactionValidator[T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]] extends ValidatorOnBlockChain[T, T, TransactionValidationError[BC, T], B, BC]
 
-sealed trait BlockValidatorError[B <: Block] extends ValidationError[B]
+sealed trait BlockValidatorError[T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]] extends ValidationError[B]
 
-abstract class BlockValidator[T <: Transaction, B <: Block, BC <: BlockChain[B, T]] extends ValidatorOnBlockChain[B, T, BlockValidatorError[B], B, BC]
+abstract class BlockValidator[T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]] extends ValidatorOnBlockChain[B, T, BlockValidatorError[T, B, BC], B, BC]
 
-abstract class ValidatorOnBlockChain[V <: Validable, T <: Transaction, E <: ValidationError[V], B <: Block, BC <: BlockChain[B, T]] {
+abstract class ValidatorOnBlockChain[V <: Validable, T <: Transaction[BC], E <: ValidationError[V], B <: Block[BC, T], BC <: BlockChain[B, T]] {
   def validate(tx: V)(implicit blockChain: BC): Either[Seq[E], V]
 }
 
 // todo хранить блокчейн как дерево и удалять неосновные ветки после N
-abstract class BlockStorage[B <: Block] {
+abstract class BlockStorage[T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]] {
   def put(block: B): Unit
 
-  def get(id: Block#Id): B
+  def get(id: B#Id): B
 
-  def contains(id: Block#Id): Boolean
+  def contains(id: B#Id): Boolean
 }
 
-abstract class UnconfirmedTransactionStorage[T <: Transaction] {
+abstract class UnconfirmedTransactionStorage[T <: Transaction[BC], BC <: BlockChain[_, T]] {
   def put(tx: T): Unit
 
   def all: Seq[T]
@@ -62,51 +72,51 @@ abstract class UnconfirmedTransactionStorage[T <: Transaction] {
   def remove(tx: T): Option[T]
 }
 
-abstract class Account[BC <: BlockChain[_,_]]
+abstract class AccountWithAddress[BC <: BlockChain[_,_]](address: String)
 
 abstract class Wallet[BC <: BlockChain[_,_]] {
-  def createNewAccount: Account[BC]
+  def createNewAccount: AccountWithAddress[BC]
 }
 
-trait BlockChain[B <: Block, T <: Transaction] {
-  def genesis: Block
+trait BlockChain[T <: Transaction[BlockChain[T, B]], B <: Block[BlockChain[T, B],T]] {
+  type TxValidator = AggregatedValidatorOnBlockchain[T, BlockValidatorError[T, B, this.type], T, B, this.type]
+  type BlockValidator = AggregatedValidatorOnBlockchain[B, BlockValidatorError[T, B, this.type], T, B, this.type]
 
-  def hashes: Array[CryptographicHash]
+  def genesis: Block[this.type, T]
 
-  def txValidator: AggregatedValidatorOnBlockchain[T, TransactionValidationError[T], T, B, this.type]
+  def txValidator: TxValidator
 
-  def blockValidator: AggregatedValidatorOnBlockchain[B, BlockValidatorError[B], T, B, this.type]
+  def blockValidator: BlockValidator
 }
 
-
-trait BlockChainApp[B <: Block, T <: Transaction, BC <: BlockChain[B, T]] {
+trait BlockChainApp[B <: Block[BC, T], T <: Transaction[BC], BC <: BlockChain[B, T]] {
   def blockChain: BC
 
   def wallet: Wallet[BC]
 
-  def storage: BlockStorage[B]
+  def storage: BlockStorage[T, B, BC]
 
-  def utx: UnconfirmedTransactionStorage[T]
+  def utx: UnconfirmedTransactionStorage[T, BC]
 
-  def miner: BlockGenerator[B]
+  def miner: BlockGenerator[BC, T, B]
 
   def hashes: Seq[CryptographicHash]
 
-  def txValidator: AggregatedValidatorOnBlockchain[T, TransactionValidationError[T], T, B, this.type]
+  def txValidator: AggregatedValidatorOnBlockchain[T, TransactionValidationError[BC, T], T, B, this.type]
 
-  def blockValidator: AggregatedValidatorOnBlockchain[B, BlockValidatorError[B], T, B, this.type]
+  def blockValidator: AggregatedValidatorOnBlockchain[B, BlockValidatorError[T, B, BC], T, B, this.type]
 }
 
-trait IncomingNetworkLayer {
+trait IncomingNetworkLayer[T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]] {
   def incomingRequests: Observable[ProtocolRequest]
-  def incomingTx: Observable[Transaction]
-  def incomingBlocks: Observable[Block]
+  def incomingTx: Observable[T]
+  def incomingBlocks: Observable[B]
 }
 
-trait OutgoingNetworkLayer {
+trait OutgoingNetworkLayer[T <: Transaction[BC], B <: Block[BC, T], BC <: BlockChain[B, T]] {
   def outgoingRequests: Observable[ProtocolRequest]
-  def outgoingTx: Observable[Transaction]
-  def outgoingBlocks: Observable[Block]
+  def outgoingTx: Observable[T]
+  def outgoingBlocks: Observable[B]
 }
 
-trait NetworkLayer extends IncomingNetworkLayer with OutgoingNetworkLayer
+trait NetworkLayer[B <: Block[BC, T], T <: Transaction[BC], BC <: BlockChain[B, T]] extends IncomingNetworkLayer[B, T, BC] with OutgoingNetworkLayer[B, T, BC]
