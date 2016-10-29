@@ -2,10 +2,9 @@ package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
+import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake256
 import scorex.crypto.signatures.Curve25519
-
-import scala.util.Either
 
 private[waves] trait WavesBlocks {
   this: WavesBlockChain =>
@@ -53,26 +52,58 @@ private[waves] trait WavesAccounts {
 
     private def calcCheckSum(withoutChecksum: Array[Byte]): Array[Byte] = ScorexHashChain.hash(withoutChecksum).take(ChecksumLength)
 
-    def apply(keyPair: (PrivateKey, PublicKey))(implicit bc: WavesBlockChain): Account = this (keyPair._2, Some(keyPair._1))
+    def apply(keyPair: (PrivateKey, PublicKey)): Account = this (keyPair._2, Some(keyPair._1))
 
-    def apply(seed: Array[Byte])(implicit bc: WavesBlockChain): Account = this (Curve25519.createKeyPair(seed))
+    def apply(seed: Array[Byte]): Account = this (Curve25519.createKeyPair(seed))
 
     def addressFromPublicKey(publicKey: Array[Byte]): Array[Byte] = {
       val publicKeyHash = secureHash.hash(publicKey).take(HashLength)
       val withoutChecksum = AddressVersion +: chainId +: publicKeyHash
       withoutChecksum ++ calcCheckSum(withoutChecksum)
     }
+
+    def isValidAddress(addressBytes: Array[Byte]): Boolean = {
+        val version = addressBytes.head
+        val network = addressBytes.tail.head
+        if (version != AddressVersion) {
+          // todo validation error
+//          log.warn(s"Unknown address version: $version")
+          false
+        } else if (network != chainId) {
+          // todo validation error
+//          log.warn(s"Unknown network: $network")
+          false
+        } else {
+          if (addressBytes.length != Account.AddressLength){
+            false
+          } else {
+            val checkSum = addressBytes.takeRight(ChecksumLength)
+
+            val checkSumGenerated = calcCheckSum(addressBytes.dropRight(ChecksumLength))
+
+            checkSum.sameElements(checkSumGenerated)
+            // todo checksum validation error
+          }
+        }
+      }
   }
 
   case class Account(override val publicKey: PublicKey, override val privateKey: Option[PrivateKey] = None)
     extends BlockChainAccount(publicKey, privateKey) {
 
-    import Account.addressFromPublicKey
+    import Account._
 
     def address = Address(addressFromPublicKey(publicKey))
+
+    def isValid = isValidAddress(address.address)
   }
 
   case class Address(override val address: Array[Byte]) extends BlockChainAddress(address)
+
+}
+
+private[waves] trait WavesTransactionsSigners {
+  this: WavesTransactions =>
 
 }
 
@@ -201,11 +232,44 @@ private[waves] trait WavesTransactions {
 
 }
 
+trait WavesTransactionsValidators {
+  self: WavesBlockChain =>
+
+  class ReissueTransactionValidator extends TransactionValidator[ReissueTransaction] {
+    override def validate(tx: ReissueTransaction)(implicit blockChain: self.type):
+    Either[Seq[TransactionValidationError[ReissueTransaction]], ReissueTransaction] = {
+//      if (tx.sender.isValid) {
+        // todo adress validation error
+//        ???
+//      } else if (quantity <= 0) {
+//        ValidationResult.NegativeAmount
+//      } else if (fee <= 0) {
+//        ValidationResult.InsufficientFee
+//      } else if (!EllipticCurveImpl.verify(tx.signature, tx.toSign, tx.sender.publicKey)) {
+//        ValidationResult.InvalidSignature
+//      } else ValidationResult.ValidateOke
+      ???
+    }
+  }
+  override def txValidator: BlockChainTransactionValidator =
+    new AggregatedValidatorOnBlockchain[self.type, T, TransactionValidationError[_ <: T]](Seq[TransactionValidator[_ <: T]](
+      new ReissueTransactionValidator
+  ))
+}
+
+trait WavesBlocksValidators {
+  self: WavesBlockChain =>
+
+  override def blockValidator: BlockChainBlockValidator = ???
+}
 
 private[waves] abstract class WavesBlockChain extends BlockChain
   with WavesTransactions
+  with WavesTransactionsSigners
+  with WavesTransactionsValidators
   with WavesAccounts
-  with WavesBlocks {
+  with WavesBlocks
+  with WavesBlocksValidators {
   def chainId: Byte
 
   final type T = Transaction
@@ -219,10 +283,6 @@ private[waves] abstract class WavesBlockChain extends BlockChain
   def state: StateStorage[this.type]
 
   def blocksStorage: BlockStorage[this.type]
-
-  override def txValidator: TransactionValidator = ???
-
-  override def blockValidator: BlockValidator = ???
 }
 
 private[waves] abstract class WavesStateStorage extends StateStorage[WavesBlockChain] {
