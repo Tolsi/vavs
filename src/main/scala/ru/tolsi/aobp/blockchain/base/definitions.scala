@@ -4,27 +4,34 @@ import rx.Observable
 
 trait Signable
 
-sealed trait Signature[V]
+sealed trait Signature[V] {
+  def value: V
+}
 
-class Signature32[V](value: V) extends Signature[V]
+class Signature32[V](val value: V) extends Signature[V]
 
-class Signature64[V](value: V) extends Signature[V]
+class Signature64[V](val value: V) extends Signature[V]
 
 sealed trait Validable
 
 sealed trait ValidationError[V <: Validable]
 
-case class Signed[T <: Signable, V, S <: Signature[V]](value: T, signature: S)
+trait Signed[T <: Signable, V, S <: Signature[V]] {
+  def signature: S
+}
 
-abstract class Block[BC <: BlockChain[T, Block[BC, T]], T <: Transaction[BC]] extends Validable with Signable {
+abstract class Block[T <: Transaction[BC], BC <: BlockChain[T, Block[BC, T]]] extends Validable with Signable {
   type Id <: Ordered[Id]
 }
 
 sealed trait ProtocolRequest
 
-abstract class Transaction[BC <: BlockChain[_,_]](id: Transaction[BC]#Id, timestamp: Long, amount: Long, fee: Long) extends Validable with Signable {
-  type Id = Array[Byte]
-}
+trait StateChangeReason
+
+trait SignedTransaction[T <: Transaction[BC], BC <: BlockChain[T, _], V] extends Transaction[BC] with Signed[T, V, Signature[V]]
+trait SignedBlock[B <: Block[BC, T], T <: Transaction[BC], BC <: BlockChain[T, B], V] extends Block[BC, T] with Signed[B, V, Signature[V]]
+
+abstract class Transaction[BC <: BlockChain[_,_]] extends Validable with Signable with StateChangeReason
 
 abstract class BlockGenerator[BC <: BlockChain[_,_], T <: Transaction[BC], B <: Block[BC, T]] {
   def blocks: Observable[B]

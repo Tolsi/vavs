@@ -63,6 +63,7 @@ javaOptions in Universal ++= Seq(
   "-J-XX:GCLogFileSize=100M",
   "-J-XX:+UseStringDeduplication",
   "-J-XX:+PrintStringDeduplicationStatistics",
+  "-J-XX:+UseCompressedStrings",
 
   // JMX
   "-J-Djava.rmi.server.hostname=127.0.0.1",

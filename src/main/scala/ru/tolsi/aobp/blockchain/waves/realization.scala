@@ -6,6 +6,8 @@ import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake256
 import scorex.crypto.signatures.Curve25519
 
+import scala.util.Either
+
 object WavesAccount {
 
   def fromPublicKey(publicKey: PublicKey)(implicit bc: WavesBlockChain): WavesAccount =
@@ -31,21 +33,74 @@ object WavesAccount {
 case class WavesAccount(publicKey: PublicKey, privateKey: Option[PrivateKey] = None)(implicit bc: WavesBlockChain)
   extends AccountWithAddress(WavesAccount.addressFromPublicKey(publicKey)(bc))
 
-trait WavesTransaction extends Transaction[WavesBlockChain] {
+abstract class WavesTransaction extends Transaction[WavesBlockChain] {
+  def id: Array[Byte]
+  def typeId: Byte
   val recipient: AccountWithAddress[WavesBlockChain]
-
   def timestamp: Long
-
   def amount: Long
-
+  def currency: WavesСurrency
   def fee: Long
-
+  def feeCurrency: WavesСurrency
   // todo is it good idea? external implicit balance changes calculator
-  def balanceChanges(): Seq[(WavesAccount, Long)]
+//  def balanceChanges(): Seq[(WavesAccount, Long)]
+}
+
+trait SignedWavesTransaction extends WavesTransaction with SignedTransaction[WavesTransaction, WavesBlockChain, Array[Byte]] {
+  override def id: Array[Byte] = signature.value
+}
+
+trait AssetIssuanceTransaction extends SignedTransaction[WavesTransaction, WavesBlockChain, Array[Byte]] {
+  def issue: WavesMoney[Right[Waves.type, Asset]]
+  def reissuable: Boolean
+}
+
+case class GenesisTransaction(recipient: AccountWithAddress[WavesBlockChain], timestamp: Long, amount: Long) extends SignedWavesTransaction {
+  override def typeId: Byte = 1
+  override def fee: Long = 0
+  override def currency: WavesСurrency = Waves
+  override def feeCurrency: WavesСurrency = Waves
+  override def signature: Signature[Array[Byte]] = ???
+}
+
+case class PaymentTransaction(sender: WavesAccount,
+                         override val recipient: AccountWithAddress[WavesBlockChain],
+                         override val amount: Long,
+                         override val fee: Long,
+                         override val timestamp: Long) extends SignedWavesTransaction {
+  override def typeId: Byte = 2
+  override def currency: WavesСurrency = Waves
+  override def feeCurrency: WavesСurrency = Waves
+  override def signature: Signature[Array[Byte]] = ???
+}
+case class IssueTransaction(sender: WavesAccount,
+                       name: Array[Byte],
+                       description: Array[Byte],
+                       issue: WavesMoney[Right[Waves.type, Asset]],
+                       decimals: Byte,
+                       reissuable: Boolean,
+                       fee: WavesMoney[Left[Waves.type, Asset]],
+                       timestamp: Long) extends AssetIssuanceTransaction {
+  override def signature: Signature[Array[Byte]] = ???
+}
+case class ReissueTransaction(sender: WavesAccount,
+                              issue: WavesMoney[Right[Waves.type, Asset]],
+                              reissuable: Boolean,
+                              fee: WavesMoney[Left[Waves.type, Asset]],
+                              timestamp: Long,
+                              signature: Array[Byte])  extends AssetIssuanceTransaction
+
+case class TransferTransaction(timestamp: Long,
+                          sender: WavesAccount,
+                          recipient: AccountWithAddress[WavesBlockChain],
+                          amount: WavesMoney[Either[Waves.type, Asset]],
+                          fee: WavesMoney[Either[Waves.type, Asset]],
+                          attachment: Array[Byte]) extends SignedTransaction[WavesTransaction, WavesBlockChain, Array[Byte]] {
+  override def signature: Signature[Array[Byte]] = ???
 }
 
 
-trait WavesBlock extends BaseBlock[WavesBlockChain, WavesTransaction] {
+trait WavesBlock extends BaseBlock[WavesTransaction, WavesBlock] {
   override type Id = ArraySignature32
 
   val version: Byte
@@ -90,10 +145,10 @@ abstract class WavesBlockChain extends BlockChain[WavesBlock, WavesTransaction] 
   override def blockValidator: BlockValidator = ???
 }
 
-abstract class WavesStateStorage extends StateStorage[WavesTransaction, WavesBlock, WavesStateStorage#BalanceAccount] {
-  type BalanceAccount = String
+abstract class WavesStateStorage extends StateStorage[WavesTransaction, WavesBlock, WavesBlockChain] {
   type AssetId = String
-  type Balance = Long
+  type BalanceAccount = String
+  override type Balance = Long
 
   def currentState: Map[BalanceAccount, Balance]
 
@@ -102,5 +157,6 @@ abstract class WavesStateStorage extends StateStorage[WavesTransaction, WavesBlo
 
   def apply(b: WavesBlock): Unit
 
-  def rollback(b: WavesBlock): Unit
+  // todo tree storage
+  def jumpToState(b: WavesBlock): Unit
 }
