@@ -7,6 +7,7 @@ import scala.util.Either
 package object waves {
   type Seed = Array[Byte]
   type PrivateKey = Array[Byte]
+  type Address = Array[Byte]
   type PublicKey = Array[Byte]
 
   type ArraySignature32 = Signature32[Array[Byte]]
