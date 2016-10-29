@@ -79,12 +79,20 @@ private[waves] trait WavesAccounts {
 private[waves] trait WavesTransactions {
   this: WavesBlockChain =>
 
+  object TransactionType extends Enumeration {
+    val GenesisTransaction = Value(1)
+    val PaymentTransaction = Value(2)
+    val IssueTransaction = Value(3)
+    val TransferTransaction = Value(4)
+    val ReissueTransaction = Value(5)
+  }
+
   abstract class Transaction extends BlockChainTransaction {
     def id: Array[Byte]
 
-    def typeId: Byte
+    def typeId: TransactionType.Value
 
-    val recipient: BlockChainAddress
+    val recipient: Address
 
     def timestamp: Long
 
@@ -104,35 +112,32 @@ private[waves] trait WavesTransactions {
     override def id: Array[Byte] = signature.value
   }
 
-  trait AssetIssuanceTransaction extends BlockChainSignedTransaction[Array[Byte]] {
-    def issue: WavesMoney[Right[Waves.type, Asset]]
-    def reissuable: Boolean
-  }
-
-  case class GenesisTransaction(recipient: BlockChainAddress, timestamp: Long, amount: Long) extends SignedTransaction {
-    override val typeId: Byte = 1
+  case class GenesisTransaction(recipient: Address, timestamp: Long, amount: Long, signature: Signature[Array[Byte]]) extends SignedTransaction {
+    override val typeId = TransactionType.GenesisTransaction
 
     override val fee: Long = 0
 
     override val currency: WavesСurrency = Waves
 
     override val feeCurrency: WavesСurrency = Waves
-
-    override val signature: Signature[Array[Byte]] = ???
   }
 
   case class PaymentTransaction(sender: Account,
-                                override val recipient: BlockChainAddress,
+                                override val recipient: Address,
                                 override val amount: Long,
                                 override val fee: Long,
-                                override val timestamp: Long) extends SignedTransaction {
-    override def typeId: Byte = 2
+                                override val timestamp: Long,
+                                signature: Signature[Array[Byte]]) extends SignedTransaction {
+    override def typeId = TransactionType.PaymentTransaction
 
     override def currency: WavesСurrency = Waves
 
     override def feeCurrency: WavesСurrency = Waves
+  }
 
-    override def signature: Signature[Array[Byte]] = ???
+  trait AssetIssuanceTransaction extends SignedTransaction {
+    def issue: WavesMoney[Right[Waves.type, Asset]]
+    def reissuable: Boolean
   }
 
   case class IssueTransaction(sender: Account,
@@ -141,25 +146,57 @@ private[waves] trait WavesTransactions {
                               issue: WavesMoney[Right[Waves.type, Asset]],
                               decimals: Byte,
                               reissuable: Boolean,
-                              fee: WavesMoney[Left[Waves.type, Asset]],
-                              timestamp: Long) extends AssetIssuanceTransaction {
-    override def signature: Signature[Array[Byte]] = ???
+                              feeMoney: WavesMoney[Left[Waves.type, Asset]],
+                              timestamp: Long,
+                              signature: Signature[Array[Byte]]) extends AssetIssuanceTransaction {
+    override def typeId = TransactionType.IssueTransaction
+
+    override val recipient: Address = sender.address
+
+    override def amount: Long = issue.value
+
+    override def currency: WavesСurrency = issue.currency.b
+
+    override def feeCurrency: WavesСurrency = feeMoney.currency.a
+
+    override def fee: Long = feeMoney.value
   }
 
   case class ReissueTransaction(sender: Account,
                                 issue: WavesMoney[Right[Waves.type, Asset]],
                                 reissuable: Boolean,
-                                fee: WavesMoney[Left[Waves.type, Asset]],
+                                feeMoney: WavesMoney[Left[Waves.type, Asset]],
                                 timestamp: Long,
-                                signature: Signature[Array[Byte]]) extends AssetIssuanceTransaction
+                                signature: Signature[Array[Byte]]) extends AssetIssuanceTransaction {
+    override def typeId = TransactionType.ReissueTransaction
+
+    override val recipient: Address = sender.address
+
+    override def amount: Long = issue.value
+
+    override def currency: WavesСurrency = issue.currency.b
+
+    override def feeCurrency: WavesСurrency = feeMoney.currency.a
+
+    override def fee: Long = feeMoney.value
+  }
 
   case class TransferTransaction(timestamp: Long,
                                  sender: Account,
-                                 recipient: BlockChainAddress,
-                                 amount: WavesMoney[Either[Waves.type, Asset]],
-                                 fee: WavesMoney[Either[Waves.type, Asset]],
-                                 attachment: Array[Byte]) extends BlockChainSignedTransaction[Array[Byte]] {
-    override def signature: Signature[Array[Byte]] = ???
+                                 recipient: Address,
+                                 transfer: WavesMoney[Either[Waves.type, Asset]],
+                                 feeMoney: WavesMoney[Either[Waves.type, Asset]],
+                                 attachment: Array[Byte],
+                                 signature: Signature[Array[Byte]]) extends SignedTransaction {
+    override def typeId = TransactionType.TransferTransaction
+
+    override def amount: Long = transfer.value
+
+    override def currency: WavesСurrency = transfer.currency.fold(identity, identity)
+
+    override def feeCurrency: WavesСurrency = feeMoney.currency.fold(identity, identity)
+
+    override def fee: Long = feeMoney.value
   }
 
 }
