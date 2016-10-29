@@ -2,49 +2,89 @@ package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
-import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake256
 import scorex.crypto.signatures.Curve25519
 
 import scala.util.Either
 
-abstract class WavesBlockChain extends BlockChain {
-  val chainId: Byte
+trait WavesBlocks {
+  this: WavesBlockChain =>
 
-  val secureHash = ScorexHashChain
-  val fastHash = Blake256
+  trait WavesBlock extends BlockChainBlock {
+    override type Id = ArraySignature32
 
-  case class WavesAccount(override val publicKey: PublicKey, override val privateKey: Option[PrivateKey] = None)
-    extends Account(publicKey, privateKey)
+    val version: Byte
+    val timestamp: Long
+    val reference: ArraySignature64
 
-  case class WavesAddress(override val address: Array[Byte]) extends Address(address)
+    def transactions: Seq[Signed[Transaction, Array[Byte], ArraySignature64]]
 
-  object WavesAccount {
-    def fromPublicKey(publicKey: PublicKey)(implicit bc: WavesBlockChain): WavesAccount = new WavesAccount(publicKey)
+    val baseTarget: Long
+    val generatorSignature: ArraySignature32
+  }
 
+  class GenesisBlock(val timestamp: Long,
+                     val reference: ArraySignature64,
+                     val transactions: Seq[Signed[Transaction, Array[Byte], ArraySignature64]],
+                     val baseTarget: Long,
+                     val generatorSignature: ArraySignature32) extends WavesBlock {
+    val version: Byte = 2
+  }
+
+
+  class Block(val timestamp: Long,
+              val reference: ArraySignature64,
+              val transactions: Seq[Signed[Transaction, Array[Byte], ArraySignature64]],
+              val baseTarget: Long,
+              val generatorSignature: ArraySignature32) extends WavesBlock {
+    val version: Byte = 3
+  }
+
+}
+
+trait WavesAccounts {
+  this: WavesBlockChain =>
+
+  object Account {
     private val AddressVersion: Byte = 1
     private val ChecksumLength = 4
     private val HashLength = 20
     private val AddressLength = 1 + 1 + ChecksumLength + HashLength
 
-    def addressFromPublicKey(publicKey: Array[Byte])(implicit bc: WavesBlockChain): String = {
-      val publicKeyHash = bc.secureHash.hash(publicKey).take(HashLength)
-      val withoutChecksum = AddressVersion +: bc.chainId +: publicKeyHash
-      Base58.encode(withoutChecksum ++ calcCheckSum(withoutChecksum))
-    }
-
     private def calcCheckSum(withoutChecksum: Array[Byte]): Array[Byte] = ScorexHashChain.hash(withoutChecksum).take(ChecksumLength)
 
-    def apply(keyPair: (PrivateKey, PublicKey))(implicit bc: WavesBlockChain): WavesAccount = this (keyPair._2, Some(keyPair._1))
+    def apply(keyPair: (PrivateKey, PublicKey))(implicit bc: WavesBlockChain): Account = this (keyPair._2, Some(keyPair._1))
 
-    def apply(seed: Array[Byte])(implicit bc: WavesBlockChain): WavesAccount = this (Curve25519.createKeyPair(seed))
+    def apply(seed: Array[Byte])(implicit bc: WavesBlockChain): Account = this (Curve25519.createKeyPair(seed))
+
+    def addressFromPublicKey(publicKey: Array[Byte]): Array[Byte] = {
+      val publicKeyHash = secureHash.hash(publicKey).take(HashLength)
+      val withoutChecksum = AddressVersion +: chainId +: publicKeyHash
+      withoutChecksum ++ calcCheckSum(withoutChecksum)
+    }
   }
-  abstract class WavesTransaction extends Transaction {
+
+  case class Account(override val publicKey: PublicKey, override val privateKey: Option[PrivateKey] = None)
+    extends BlockChainAccount(publicKey, privateKey) {
+
+    import Account.addressFromPublicKey
+
+    def address = Address(addressFromPublicKey(publicKey))
+  }
+
+  case class Address(override val address: Array[Byte]) extends BlockChainAddress(address)
+
+}
+
+trait WavesTransactions {
+  this: WavesBlockChain =>
+
+  abstract class Transaction extends BlockChainTransaction {
     def id: Array[Byte]
 
     def typeId: Byte
 
-    val recipient: Address
+    val recipient: BlockChainAddress
 
     def timestamp: Long
 
@@ -60,17 +100,17 @@ abstract class WavesBlockChain extends BlockChain {
     //  def balanceChanges(): Seq[(WavesAccount, Long)]
   }
 
-  trait SignedWavesTransaction extends WavesTransaction with SignedTransaction[Array[Byte]] {
+  trait SignedWavesTransaction extends Transaction with BlockChainSignedTransaction[Array[Byte]] {
     override def id: Array[Byte] = signature.value
   }
 
-  trait AssetIssuanceTransaction extends SignedTransaction[Array[Byte]] {
+  trait AssetIssuanceTransaction extends BlockChainSignedTransaction[Array[Byte]] {
     def issue: WavesMoney[Right[Waves.type, Asset]]
 
     def reissuable: Boolean
   }
 
-  case class GenesisTransaction(recipient: Address, timestamp: Long, amount: Long) extends SignedWavesTransaction {
+  case class GenesisTransaction(recipient: BlockChainAddress, timestamp: Long, amount: Long) extends SignedWavesTransaction {
     override def typeId: Byte = 1
 
     override def fee: Long = 0
@@ -82,8 +122,8 @@ abstract class WavesBlockChain extends BlockChain {
     override def signature: Signature[Array[Byte]] = ???
   }
 
-  case class PaymentTransaction(sender: WavesAccount,
-                                override val recipient: Address,
+  case class PaymentTransaction(sender: Account,
+                                override val recipient: BlockChainAddress,
                                 override val amount: Long,
                                 override val fee: Long,
                                 override val timestamp: Long) extends SignedWavesTransaction {
@@ -96,7 +136,7 @@ abstract class WavesBlockChain extends BlockChain {
     override def signature: Signature[Array[Byte]] = ???
   }
 
-  case class IssueTransaction(sender: WavesAccount,
+  case class IssueTransaction(sender: Account,
                               name: Array[Byte],
                               description: Array[Byte],
                               issue: WavesMoney[Right[Waves.type, Asset]],
@@ -107,7 +147,7 @@ abstract class WavesBlockChain extends BlockChain {
     override def signature: Signature[Array[Byte]] = ???
   }
 
-  case class ReissueTransaction(sender: WavesAccount,
+  case class ReissueTransaction(sender: Account,
                                 issue: WavesMoney[Right[Waves.type, Asset]],
                                 reissuable: Boolean,
                                 fee: WavesMoney[Left[Waves.type, Asset]],
@@ -115,44 +155,25 @@ abstract class WavesBlockChain extends BlockChain {
                                 signature: Signature[Array[Byte]]) extends AssetIssuanceTransaction
 
   case class TransferTransaction(timestamp: Long,
-                                 sender: WavesAccount,
-                                 recipient: Address,
+                                 sender: Account,
+                                 recipient: BlockChainAddress,
                                  amount: WavesMoney[Either[Waves.type, Asset]],
                                  fee: WavesMoney[Either[Waves.type, Asset]],
-                                 attachment: Array[Byte]) extends SignedTransaction[Array[Byte]] {
+                                 attachment: Array[Byte]) extends BlockChainSignedTransaction[Array[Byte]] {
     override def signature: Signature[Array[Byte]] = ???
   }
 
-
-  trait WavesBlock extends Block {
-    override type Id = ArraySignature32
-
-    val version: Byte
-    val timestamp: Long
-    val reference: ArraySignature64
-
-    def transactions: Seq[Signed[WavesTransaction, Array[Byte], ArraySignature64]]
-
-    val baseTarget: Long
-    val generatorSignature: ArraySignature32
-  }
-
-  class GenesisBlock(val timestamp: Long,
-                     val reference: ArraySignature64,
-                     val transactions: Seq[Signed[WavesTransaction, Array[Byte], ArraySignature64]],
-                     val baseTarget: Long,
-                     val generatorSignature: ArraySignature32) extends WavesBlock {
-    val version: Byte = 2
-  }
+}
 
 
-  class SimpleBlock(val timestamp: Long,
-                    val reference: ArraySignature64,
-                    val transactions: Seq[Signed[WavesTransaction, Array[Byte], ArraySignature64]],
-                    val baseTarget: Long,
-                    val generatorSignature: ArraySignature32) extends WavesBlock {
-    val version: Byte = 3
-  }
+abstract class WavesBlockChain extends BlockChain
+  with WavesTransactions
+  with WavesAccounts
+  with WavesBlocks {
+  val chainId: Byte
+
+  val secureHash = ScorexHashChain
+  val fastHash = Blake256
 
   def state: StateStorage[this.type]
 
@@ -173,8 +194,8 @@ abstract class WavesStateStorage extends StateStorage[WavesBlockChain] {
   def currentBalance(balanceAccount: BalanceAccount): Balance
   def currentAssetBalance(balanceAccount: BalanceAccount, asset: AssetId): Balance
 
-  def apply(b: WavesBlockChain#Block): Unit
+  def apply(b: WavesBlockChain#BlockChainBlock): Unit
 
   // todo tree storage
-  def jumpToState(b: WavesBlockChain#Block): Unit
+  def jumpToState(b: WavesBlockChain#BlockChainBlock): Unit
 }

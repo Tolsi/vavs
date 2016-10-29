@@ -22,13 +22,13 @@ trait Signed[T <: Signable, V, S <: Signature[V]] {
 
 trait StateChangeReason
 
-sealed trait TransactionValidationError[B <: BlockChain] extends ValidationError[B#Transaction]
+sealed trait TransactionValidationError[B <: BlockChain] extends ValidationError[B#BlockChainTransaction]
 
-sealed trait BlockValidatorError[B <: BlockChain] extends ValidationError[B#Block]
+sealed trait BlockValidatorError[B <: BlockChain] extends ValidationError[B#BlockChainBlock]
 
-abstract class TransactionValidator[B <: BlockChain] extends ValidatorOnBlockChain[B, B#Transaction, TransactionValidationError[B]]
+abstract class TransactionValidator[B <: BlockChain] extends ValidatorOnBlockChain[B, B#BlockChainTransaction, TransactionValidationError[B]]
 
-abstract class BlockValidator[B <: BlockChain] extends ValidatorOnBlockChain[B, B#Block, BlockValidatorError[B]]
+abstract class BlockValidator[B <: BlockChain] extends ValidatorOnBlockChain[B, B#BlockChainBlock, BlockValidatorError[B]]
 
 abstract class AggregatedValidatorOnBlockchain[B <: BlockChain, V <: Validable, VE <: ValidationError[V]](validators: Seq[ValidatorOnBlockChain[B, V, VE]]) extends ValidatorOnBlockChain[B, V, VE] {
   // http://stackoverflow.com/questions/7230999/how-to-reduce-a-seqeithera-b-to-a-eithera-seqb
@@ -49,28 +49,28 @@ abstract class ValidatorOnBlockChain[B <: BlockChain, V <: Validable, E <: Valid
 
 trait BlockChain {
 
-  abstract class Block extends Validable with Signable {
+  abstract class BlockChainBlock extends Validable with Signable {
     type Id
   }
 
-  abstract class Transaction extends Validable with Signable with StateChangeReason
+  abstract class BlockChainTransaction extends Validable with Signable with StateChangeReason
 
-  type T <: Transaction
-  type B <: Block
-  type A <: Account
+  type T <: BlockChainTransaction
+  type B <: BlockChainBlock
+  type A <: BlockChainAccount
 
-  abstract class Account(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
+  abstract class BlockChainAccount(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
 
-  abstract class Address(val address: Array[Byte])
+  abstract class BlockChainAddress(val address: Array[Byte])
 
-  trait SignedTransaction[V] extends Transaction with Signed[T, V, Signature[V]]
+  trait BlockChainSignedTransaction[V] extends BlockChainTransaction with Signed[T, V, Signature[V]]
 
-  trait SignedBlock[V] extends Block with Signed[B, V, Signature[V]]
+  trait BlockChainSignedBlock[V] extends BlockChainBlock with Signed[B, V, Signature[V]]
 
-  type TransactionValidator = AggregatedValidatorOnBlockchain[this.type, Transaction, TransactionValidationError[this.type]]
-  type BlockValidator = AggregatedValidatorOnBlockchain[this.type, Block, BlockValidatorError[this.type]]
+  type TransactionValidator = AggregatedValidatorOnBlockchain[this.type, BlockChainTransaction, TransactionValidationError[this.type]]
+  type BlockValidator = AggregatedValidatorOnBlockchain[this.type, BlockChainBlock, BlockValidatorError[this.type]]
 
-  def genesis: Block
+  def genesis: BlockChainBlock
 
   def txValidator: TransactionValidator
 
@@ -79,11 +79,11 @@ trait BlockChain {
 
 
 abstract class Wallet[B <: BlockChain] {
-  def createNewAccount: B#Account
+  def createNewAccount: B#BlockChainAccount
 }
 
 abstract class BlockGenerator[B <: BlockChain] {
-  def blocks: Observable[B#Block]
+  def blocks: Observable[B#BlockChainBlock]
 }
 
 trait BlockChainApp[B <: BlockChain] {
@@ -91,26 +91,26 @@ trait BlockChainApp[B <: BlockChain] {
 
   def wallet: Wallet[B]
 
-  def utx: B#Transaction
+  def utx: B#BlockChainTransaction
 
   def miner: BlockGenerator[B]
 }
 
 // todo хранить блокчейн как дерево и удалять неосновные ветки после N
 abstract class BlockStorage[B <: BlockChain] {
-  def put(block: B#Block): Unit
+  def put(block: B#BlockChainBlock): Unit
 
-  def get(id: B#Block#Id): Option[B#Block]
+  def get(id: B#BlockChainBlock#Id): Option[B#BlockChainBlock]
 
-  def contains(id: B#Block#Id): Boolean
+  def contains(id: B#BlockChainBlock#Id): Boolean
 }
 
 abstract class UnconfirmedTransactionStorage[B <: BlockChain] {
-  def put(tx: B#Transaction): Unit
+  def put(tx: B#BlockChainTransaction): Unit
 
-  def all: Seq[B#Transaction]
+  def all: Seq[B#BlockChainTransaction]
 
-  def remove(tx: B#Transaction): Option[B#Transaction]
+  def remove(tx: B#BlockChainTransaction): Option[B#BlockChainTransaction]
 }
 
 abstract class StateStorage[B <: BlockChain] {
@@ -121,9 +121,9 @@ abstract class StateStorage[B <: BlockChain] {
 
   def currentBalance(balanceAccount: BalanceAccount): Balance
 
-  def apply(b: B#Block): Unit
+  def apply(b: B#BlockChainBlock): Unit
 
-  def rollback(b: B#Block): Unit
+  def rollback(b: B#BlockChainBlock): Unit
 }
 
 sealed trait ProtocolRequest
@@ -131,17 +131,17 @@ sealed trait ProtocolRequest
 trait IncomingNetworkLayer[B <: BlockChain] {
   def incomingRequests: Observable[ProtocolRequest]
 
-  def incomingTx: Observable[B#Transaction]
+  def incomingTx: Observable[B#BlockChainTransaction]
 
-  def incomingBlocks: Observable[B#Block]
+  def incomingBlocks: Observable[B#BlockChainBlock]
 }
 
 trait OutgoingNetworkLayer[B <: BlockChain] {
   def outgoingRequests: Observable[ProtocolRequest]
 
-  def outgoingTx: Observable[B#Transaction]
+  def outgoingTx: Observable[B#BlockChainTransaction]
 
-  def outgoingBlocks: Observable[B#Block]
+  def outgoingBlocks: Observable[B#BlockChainBlock]
 }
 
 trait NetworkLayer[B <: BlockChain] extends IncomingNetworkLayer[B] with OutgoingNetworkLayer[B]
