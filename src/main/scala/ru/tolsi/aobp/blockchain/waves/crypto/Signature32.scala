@@ -3,7 +3,7 @@ package ru.tolsi.aobp.blockchain.waves.crypto
 import scorex.crypto.encode.Base58
 import ru.tolsi.aobp.blockchain.base.{Signature32 => BaseSignature32}
 
-class Signature32(val bytes: Array[Byte]) extends BaseSignature32(bytes) {
+private[waves] class Signature32(val bytes: Array[Byte]) extends BaseSignature32(bytes) {
 
   assert(bytes.length == Signature32.Length,
     s"Incorrect signature length, length of given array of bytes is ${bytes.length}, expected length is ${Signature64.Length}")

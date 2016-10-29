@@ -7,7 +7,7 @@ import scorex.crypto.signatures.Curve25519
 
 import scala.util.Either
 
-trait WavesBlocks {
+private[waves] trait WavesBlocks {
   this: WavesBlockChain =>
 
   trait WavesBlock extends BlockChainBlock {
@@ -42,7 +42,7 @@ trait WavesBlocks {
 
 }
 
-trait WavesAccounts {
+private[waves] trait WavesAccounts {
   this: WavesBlockChain =>
 
   object Account {
@@ -76,7 +76,7 @@ trait WavesAccounts {
 
 }
 
-trait WavesTransactions {
+private[waves] trait WavesTransactions {
   this: WavesBlockChain =>
 
   abstract class Transaction extends BlockChainTransaction {
@@ -100,33 +100,32 @@ trait WavesTransactions {
     //  def balanceChanges(): Seq[(WavesAccount, Long)]
   }
 
-  trait SignedWavesTransaction extends Transaction with BlockChainSignedTransaction[Array[Byte]] {
+  trait SignedTransaction extends Transaction with BlockChainSignedTransaction[Array[Byte]] {
     override def id: Array[Byte] = signature.value
   }
 
   trait AssetIssuanceTransaction extends BlockChainSignedTransaction[Array[Byte]] {
     def issue: WavesMoney[Right[Waves.type, Asset]]
-
     def reissuable: Boolean
   }
 
-  case class GenesisTransaction(recipient: BlockChainAddress, timestamp: Long, amount: Long) extends SignedWavesTransaction {
-    override def typeId: Byte = 1
+  case class GenesisTransaction(recipient: BlockChainAddress, timestamp: Long, amount: Long) extends SignedTransaction {
+    override val typeId: Byte = 1
 
-    override def fee: Long = 0
+    override val fee: Long = 0
 
-    override def currency: WavesСurrency = Waves
+    override val currency: WavesСurrency = Waves
 
-    override def feeCurrency: WavesСurrency = Waves
+    override val feeCurrency: WavesСurrency = Waves
 
-    override def signature: Signature[Array[Byte]] = ???
+    override val signature: Signature[Array[Byte]] = ???
   }
 
   case class PaymentTransaction(sender: Account,
                                 override val recipient: BlockChainAddress,
                                 override val amount: Long,
                                 override val fee: Long,
-                                override val timestamp: Long) extends SignedWavesTransaction {
+                                override val timestamp: Long) extends SignedTransaction {
     override def typeId: Byte = 2
 
     override def currency: WavesСurrency = Waves
@@ -166,14 +165,19 @@ trait WavesTransactions {
 }
 
 
-abstract class WavesBlockChain extends BlockChain
+private[waves] abstract class WavesBlockChain extends BlockChain
   with WavesTransactions
   with WavesAccounts
   with WavesBlocks {
-  val chainId: Byte
+  def chainId: Byte
 
-  val secureHash = ScorexHashChain
-  val fastHash = Blake256
+  final type T = Transaction
+  final type B = Block
+  final type AС = Account
+  final type AВ = Address
+
+  final val secureHash = ScorexHashChain
+  final val fastHash = Blake256
 
   def state: StateStorage[this.type]
 
@@ -184,7 +188,7 @@ abstract class WavesBlockChain extends BlockChain
   override def blockValidator: BlockValidator = ???
 }
 
-abstract class WavesStateStorage extends StateStorage[WavesBlockChain] {
+private[waves] abstract class WavesStateStorage extends StateStorage[WavesBlockChain] {
   type AssetId = String
   type BalanceAccount = String
   override type Balance = Long

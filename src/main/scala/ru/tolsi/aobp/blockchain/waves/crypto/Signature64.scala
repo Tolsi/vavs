@@ -4,7 +4,7 @@ import scorex.crypto.encode.Base58
 import scorex.crypto.signatures.Curve25519
 import ru.tolsi.aobp.blockchain.base.{Signature64 => BaseSignature64}
 
-class Signature64(val bytes: Array[Byte]) extends BaseSignature64(bytes) {
+private[waves] class Signature64(val bytes: Array[Byte]) extends BaseSignature64(bytes) {
   assert(bytes.length == Signature64.Length,
     s"Incorrect signature length, length of given array of bytes is ${bytes.length}, expected length is ${Curve25519.SignatureLength}")
 

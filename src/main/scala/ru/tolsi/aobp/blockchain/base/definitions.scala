@@ -22,22 +22,22 @@ trait Signed[T <: Signable, V, S <: Signature[V]] {
 
 trait StateChangeReason
 
-sealed trait TransactionValidationError[B <: BlockChain] extends ValidationError[B#BlockChainTransaction]
+sealed trait TransactionValidationError[BC <: BlockChain] extends ValidationError[BC#T]
 
-sealed trait BlockValidatorError[B <: BlockChain] extends ValidationError[B#BlockChainBlock]
+sealed trait BlockValidatorError[BC <: BlockChain] extends ValidationError[BC#B]
 
-abstract class TransactionValidator[B <: BlockChain] extends ValidatorOnBlockChain[B, B#BlockChainTransaction, TransactionValidationError[B]]
+abstract class TransactionValidator[BC <: BlockChain] extends ValidatorOnBlockChain[BC, BC#T, TransactionValidationError[BC]]
 
-abstract class BlockValidator[B <: BlockChain] extends ValidatorOnBlockChain[B, B#BlockChainBlock, BlockValidatorError[B]]
+abstract class BlockValidator[B <: BlockChain] extends ValidatorOnBlockChain[B, B#B, BlockValidatorError[B]]
 
-abstract class AggregatedValidatorOnBlockchain[B <: BlockChain, V <: Validable, VE <: ValidationError[V]](validators: Seq[ValidatorOnBlockChain[B, V, VE]]) extends ValidatorOnBlockChain[B, V, VE] {
+abstract class AggregatedValidatorOnBlockchain[BC <: BlockChain, V <: Validable, VE <: ValidationError[V]](validators: Seq[ValidatorOnBlockChain[BC, V, VE]]) extends ValidatorOnBlockChain[BC, V, VE] {
   // http://stackoverflow.com/questions/7230999/how-to-reduce-a-seqeithera-b-to-a-eithera-seqb
   private def sequence[A, B](s: Seq[Either[A, B]]): Either[Seq[A], B] =
     s.foldRight(Left(Nil): Either[List[A], B]) {
       (e, acc) => for (xs <- acc.left; x <- e.left) yield x :: xs
     }
 
-  override def validate(validable: V)(implicit blockChain: B): Either[Seq[VE], V] = {
+  override def validate(validable: V)(implicit blockChain: BC): Either[Seq[VE], V] = {
     sequence(validators.map(_.validate(validable)))
       .left.map(_.flatten)
   }
@@ -48,7 +48,6 @@ abstract class ValidatorOnBlockChain[B <: BlockChain, V <: Validable, E <: Valid
 }
 
 trait BlockChain {
-
   abstract class BlockChainBlock extends Validable with Signable {
     type Id
   }
@@ -57,7 +56,8 @@ trait BlockChain {
 
   type T <: BlockChainTransaction
   type B <: BlockChainBlock
-  type A <: BlockChainAccount
+  type AС <: BlockChainAccount
+  type AВ <: BlockChainAddress
 
   abstract class BlockChainAccount(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
 
@@ -67,10 +67,10 @@ trait BlockChain {
 
   trait BlockChainSignedBlock[V] extends BlockChainBlock with Signed[B, V, Signature[V]]
 
-  type TransactionValidator = AggregatedValidatorOnBlockchain[this.type, BlockChainTransaction, TransactionValidationError[this.type]]
-  type BlockValidator = AggregatedValidatorOnBlockchain[this.type, BlockChainBlock, BlockValidatorError[this.type]]
+  type TransactionValidator = AggregatedValidatorOnBlockchain[this.type, T, TransactionValidationError[this.type]]
+  type BlockValidator = AggregatedValidatorOnBlockchain[this.type, B, BlockValidatorError[this.type]]
 
-  def genesis: BlockChainBlock
+  def genesis: B
 
   def txValidator: TransactionValidator
 
