@@ -297,43 +297,43 @@ trait WavesTransactionsValidators {
   class WrongSignature(message: => String) extends TransactionValidationError(message)
 
   object TransferTransactionValidator extends TransactionValidator[TransferTransaction] {
-    private val MaxAttachmentSize = 140
+    private[waves] val MaxAttachmentSize = 140
+
+    private[waves] def addressValidation(address: Address): Option[WrongAddress] = {
+      address.validate.map(error => new WrongAddress(error.message))
+    }
+
+    private[waves] def attachmentSizeValidation(attachment: Array[Byte]): Option[WrongAttachmentSize] = {
+      if (attachment.length > MaxAttachmentSize) {
+        Some(new WrongAttachmentSize(s"${attachment.length} > $MaxAttachmentSize"))
+      } else None
+    }
+
+    private[waves] def amountValidation(amount: Long): Option[WrongAmount] = {
+      if (amount <= 0) {
+        Some(new WrongAmount(s"$amount <= 0"))
+      } else None
+    }
+
+    private[waves] def feeValidation(fee: Long): Option[WrongFee] = {
+      if (fee <= 0) {
+        Some(new WrongFee(s"$fee <= 0"))
+      } else None
+    }
+
+    private[waves] def overflowValidation(amount: Long, fee: Long): Option[Overflow] = {
+      if (Try(Math.addExact(amount, fee)).isFailure) {
+        Some(new Overflow(s"$amount + $fee = ${amount + fee}"))
+      } else None
+    }
+
+    private[waves] def signatureValidation(signature: Signature[Array[Byte]]): Option[WrongSignature] = {
+      if (???) {
+        Some(new WrongSignature(s"Signature is not valid"))
+      } else None
+    }
 
     override def validate(tx: TransferTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[TransferTransaction]], TransferTransaction] = {
-      def addressValidation(address: Address): Option[WrongAddress] = {
-        address.validate.map(error => new WrongAddress(error.message))
-      }
-
-      def attachmentSizeValidation(attachment: Array[Byte]): Option[WrongAttachmentSize] = {
-        if (tx.attachment.length > MaxAttachmentSize) {
-          Some(new WrongAttachmentSize(s"${attachment.length} > $MaxAttachmentSize"))
-        } else None
-      }
-
-      def amountValidation(amount: Long): Option[WrongAmount] = {
-        if (tx.amount <= 0) {
-          Some(new WrongAmount(s"$amount <= 0"))
-        } else None
-      }
-
-      def feeValidation(fee: Long): Option[WrongFee] = {
-        if (tx.fee <= 0) {
-          Some(new WrongFee(s"$fee <= 0"))
-        } else None
-      }
-
-      def overflowValidation(amount: Long, fee: Long): Option[Overflow] = {
-        if (Try(Math.addExact(tx.amount, tx.fee)).isFailure) {
-          Some(new Overflow(s"$amount + $fee = ${amount + fee}"))
-        } else None
-      }
-
-      def signatureValidation(signature: Signature[Array[Byte]]): Option[WrongSignature] = {
-        if (???) {
-          Some(new WrongSignature(s"Signature is not valid"))
-        } else None
-      }
-
       val errors = Seq(
         addressValidation(tx.recipient),
         attachmentSizeValidation(tx.attachment),
