@@ -6,6 +6,8 @@ import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake256
 import scorex.crypto.signatures.Curve25519
 
+import scala.util.Try
+
 private[waves] trait WavesBlocks {
   this: WavesBlockChain =>
 
@@ -45,12 +47,13 @@ private[waves] trait WavesAccounts {
   this: WavesBlockChain =>
 
   object Account {
-    private val AddressVersion: Byte = 1
-    private val ChecksumLength = 4
-    private val HashLength = 20
-    private val AddressLength = 1 + 1 + ChecksumLength + HashLength
 
-    private def calcCheckSum(withoutChecksum: Array[Byte]): Array[Byte] = ScorexHashChain.hash(withoutChecksum).take(ChecksumLength)
+    import Address._
+
+    private[waves] val ChecksumLength = 4
+    private[waves] val HashLength = 20
+
+    private[waves] def calcCheckSum(withoutChecksum: Array[Byte]): Array[Byte] = ScorexHashChain.hash(withoutChecksum).take(ChecksumLength)
 
     def apply(keyPair: (PrivateKey, PublicKey)): Account = this (keyPair._2, Some(keyPair._1))
 
@@ -61,31 +64,6 @@ private[waves] trait WavesAccounts {
       val withoutChecksum = AddressVersion +: chainId +: publicKeyHash
       withoutChecksum ++ calcCheckSum(withoutChecksum)
     }
-
-    def isValidAddress(addressBytes: Array[Byte]): Boolean = {
-        val version = addressBytes.head
-        val network = addressBytes.tail.head
-        if (version != AddressVersion) {
-          // todo validation error
-//          log.warn(s"Unknown address version: $version")
-          false
-        } else if (network != chainId) {
-          // todo validation error
-//          log.warn(s"Unknown network: $network")
-          false
-        } else {
-          if (addressBytes.length != Account.AddressLength){
-            false
-          } else {
-            val checkSum = addressBytes.takeRight(ChecksumLength)
-
-            val checkSumGenerated = calcCheckSum(addressBytes.dropRight(ChecksumLength))
-
-            checkSum.sameElements(checkSumGenerated)
-            // todo checksum validation error
-          }
-        }
-      }
   }
 
   case class Account(override val publicKey: PublicKey, override val privateKey: Option[PrivateKey] = None)
@@ -94,11 +72,52 @@ private[waves] trait WavesAccounts {
     import Account._
 
     def address = Address(addressFromPublicKey(publicKey))
-
-    def isValid = isValidAddress(address.address)
   }
 
-  case class Address(override val address: Array[Byte]) extends BlockChainAddress(address)
+  object Address {
+
+    import Account._
+
+    sealed abstract class AddressValidationError(m: => String) extends AbstractValidationError[Address](m)
+
+    class WrongAddressVersion(message: => String) extends AddressValidationError(message)
+
+    class WrongChainId(message: => String) extends AddressValidationError(message)
+
+    class WrongAddressLength(message: => String) extends AddressValidationError(message)
+
+    class WrongChecksum(message: => String) extends AddressValidationError(message)
+
+    private[waves] val AddressVersion: Byte = 1
+    private[waves] val AddressLength = 1 + 1 + ChecksumLength + HashLength
+
+    def validateAddress(addressBytes: Array[Byte]): Option[AddressValidationError] = {
+      val version = addressBytes.head
+      val network = addressBytes.tail.head
+      if (version != AddressVersion) {
+        Some(new WrongAddressVersion(s"$version != $AddressVersion"))
+      } else if (network != chainId) {
+        Some(new WrongChainId(s"$network != $chainId"))
+      } else if (addressBytes.length != AddressLength) {
+        Some(new WrongAddressLength(s"${addressBytes.length} != $AddressLength"))
+      } else {
+        val checkSum = addressBytes.takeRight(ChecksumLength)
+        val checkSumGenerated = calcCheckSum(addressBytes.dropRight(ChecksumLength))
+        if (checkSum.sameElements(checkSumGenerated)) {
+          None
+        } else {
+          Some(new WrongChecksum(s"$checkSumGenerated != $checkSum"))
+        }
+      }
+    }
+  }
+
+  case class Address(override val address: Array[Byte]) extends BlockChainAddress(address) {
+
+    import Address._
+
+    def validate: Option[AddressValidationError] = validateAddress(address)
+  }
 
 }
 
@@ -139,7 +158,7 @@ private[waves] trait WavesTransactions {
     //  def balanceChanges(): Seq[(WavesAccount, Long)]
   }
 
-  trait SignedTransaction extends Transaction with BlockChainSignedTransaction[Array[Byte]] {
+  sealed trait SignedTransaction extends Transaction with BlockChainSignedTransaction[Array[Byte]] {
     override def id: Array[Byte] = signature.value
   }
 
@@ -235,7 +254,20 @@ private[waves] trait WavesTransactions {
 trait WavesTransactionsValidators {
   self: WavesBlockChain =>
 
-  class ReissueTransactionValidator extends TransactionValidator[ReissueTransaction] {
+  object GenesisTransactionValidator extends TransactionValidator[GenesisTransaction] {
+    override def validate(tx: GenesisTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[GenesisTransaction]], GenesisTransaction] = ???
+  }
+
+  object PaymentTransactionValidator extends TransactionValidator[PaymentTransaction] {
+    override def validate(tx: PaymentTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[PaymentTransaction]], PaymentTransaction] = ???
+  }
+
+  object IssueTransactionValidator extends TransactionValidator[IssueTransaction] {
+    override def validate(tx: IssueTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[IssueTransaction]], IssueTransaction] = ???
+  }
+
+
+  object ReissueTransactionValidator extends TransactionValidator[ReissueTransaction] {
     override def validate(tx: ReissueTransaction)(implicit blockChain: self.type):
     Either[Seq[TransactionValidationError[ReissueTransaction]], ReissueTransaction] = {
 //      if (tx.sender.isValid) {
@@ -251,16 +283,86 @@ trait WavesTransactionsValidators {
       ???
     }
   }
-  override def txValidator: BlockChainTransactionValidator =
-    new AggregatedValidatorOnBlockchain[self.type, T, TransactionValidationError[_ <: T]](Seq[TransactionValidator[_ <: T]](
-      new ReissueTransactionValidator
-  ))
+
+  class WrongAddress(message: => String) extends TransactionValidationError(message)
+
+  class WrongAttachmentSize(message: => String) extends TransactionValidationError(message)
+
+  class WrongAmount(message: => String) extends TransactionValidationError(message)
+
+  class WrongFee(message: => String) extends TransactionValidationError(message)
+
+  class Overflow(message: => String) extends TransactionValidationError(message)
+
+  class WrongSignature(message: => String) extends TransactionValidationError(message)
+
+  object TransferTransactionValidator extends TransactionValidator[TransferTransaction] {
+    private val MaxAttachmentSize = 140
+
+    override def validate(tx: TransferTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[TransferTransaction]], TransferTransaction] = {
+      def addressValidation(address: Address): Option[WrongAddress] = {
+        address.validate.map(error => new WrongAddress(error.message))
+      }
+
+      def attachmentSizeValidation(attachment: Array[Byte]): Option[WrongAttachmentSize] = {
+        if (tx.attachment.length > MaxAttachmentSize) {
+          Some(new WrongAttachmentSize(s"${attachment.length} > $MaxAttachmentSize"))
+        } else None
+      }
+
+      def amountValidation(amount: Long): Option[WrongAmount] = {
+        if (tx.amount <= 0) {
+          Some(new WrongAmount(s"$amount <= 0"))
+        } else None
+      }
+
+      def feeValidation(fee: Long): Option[WrongFee] = {
+        if (tx.fee <= 0) {
+          Some(new WrongFee(s"$fee <= 0"))
+        } else None
+      }
+
+      def overflowValidation(amount: Long, fee: Long): Option[Overflow] = {
+        if (Try(Math.addExact(tx.amount, tx.fee)).isFailure) {
+          Some(new Overflow(s"$amount + $fee = ${amount + fee}"))
+        } else None
+      }
+
+      def signatureValidation(signature: Signature[Array[Byte]]): Option[WrongSignature] = {
+        if (???) {
+          Some(new WrongSignature(s"Signature is not valid"))
+        } else None
+      }
+
+      val errors = Seq(
+        addressValidation(tx.recipient),
+        attachmentSizeValidation(tx.attachment),
+        amountValidation(tx.amount),
+        feeValidation(tx.fee),
+        overflowValidation(tx.amount, tx.fee),
+        signatureValidation(tx.signature)
+      ).flatten
+      if (errors.nonEmpty) Left(errors) else Right(tx)
+    }
+  }
+
+  protected def txValidator: TransactionValidator[T] = new TransactionValidator[T] {
+    override def validate(tx: Transaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[Transaction]], Transaction] = {
+      tx match {
+        case t: GenesisTransaction => GenesisTransactionValidator.validate(t)
+        case t: PaymentTransaction => PaymentTransactionValidator.validate(t)
+        case t: IssueTransaction => IssueTransactionValidator.validate(t)
+        case t: ReissueTransaction => ReissueTransactionValidator.validate(t)
+        case t: TransferTransaction => TransferTransactionValidator.validate(t)
+      }
+    }
+  }
 }
 
 trait WavesBlocksValidators {
   self: WavesBlockChain =>
 
-  override def blockValidator: BlockChainBlockValidator = ???
+  override def blockValidator: BlockValidator[B] = ???
 }
 
 private[waves] abstract class WavesBlockChain extends BlockChain
@@ -295,8 +397,8 @@ private[waves] abstract class WavesStateStorage extends StateStorage[WavesBlockC
   def currentBalance(balanceAccount: BalanceAccount): Balance
   def currentAssetBalance(balanceAccount: BalanceAccount, asset: AssetId): Balance
 
-  def apply(b: WavesBlockChain#BlockChainBlock): Unit
+  def apply(b: WavesBlockChain#B): Unit
 
   // todo tree storage
-  def jumpToState(b: WavesBlockChain#BlockChainBlock): Unit
+  def jumpToState(b: WavesBlockChain#B): Unit
 }
