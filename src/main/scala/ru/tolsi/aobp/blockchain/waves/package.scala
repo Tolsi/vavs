@@ -1,7 +1,7 @@
 package ru.tolsi.aobp.blockchain
 
 import ru.tolsi.aobp.blockchain.base.{Signature32, Signature64}
-1import ru.tolsi.aobp.blockchain.waves.crypto.LyHash
+import ru.tolsi.aobp.blockchain.waves.crypto.LyHash
 
 import scala.util.Either
 
