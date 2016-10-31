@@ -1,6 +1,7 @@
 package ru.tolsi.aobp.blockchain
 
 import ru.tolsi.aobp.blockchain.base.{Signature32, Signature64}
+1import ru.tolsi.aobp.blockchain.waves.crypto.LyHash
 
 import scala.util.Either
 
@@ -15,7 +16,14 @@ package object waves {
 
   sealed trait WavesСurrency
   case object Waves extends WavesСurrency
-  case class Asset(id: Array[Byte]) extends WavesСurrency
+  case class Asset(id: Array[Byte]) extends WavesСurrency {
+    override def equals(obj: scala.Any): Boolean = obj match {
+      case Asset(otherId) => id sameElements otherId
+    }
+    override def hashCode(): Int = {
+      LyHash.compute(id)
+    }
+  }
 
   case class WavesMoney[C <: Either[Waves.type, Asset]](value: Long, currency: C)
 }

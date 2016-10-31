@@ -6,7 +6,7 @@ import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake256
 import scorex.crypto.signatures.Curve25519
 
-import scala.util.Try
+import scala.util.{Either, Try}
 
 private[waves] trait WavesBlocks {
   this: WavesBlockChain =>
@@ -159,6 +159,7 @@ private[waves] trait WavesTransactions {
   }
 
   sealed trait SignedTransaction extends Transaction with BlockChainSignedTransaction[Array[Byte]] {
+    // todo not always
     override def id: Array[Byte] = signature.value
   }
 
@@ -254,33 +255,146 @@ private[waves] trait WavesTransactions {
 trait WavesTransactionsValidators {
   self: WavesBlockChain =>
 
-  object GenesisTransactionValidator extends TransactionValidator[GenesisTransaction] {
-    override def validate(tx: GenesisTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[GenesisTransaction]], GenesisTransaction] = ???
+  abstract class AbstractTransactionValidator[TX <: T] extends TransactionValidator[TX] {
+    private[waves] val MaxAttachmentSize = 140
+
+    private[waves] def addressValidation(address: Address): Option[WrongAddress] = {
+      address.validate.map(error => new WrongAddress(error.message))
+    }
+
+    private[waves] def attachmentSizeValidation(attachment: Array[Byte]): Option[WrongAttachmentSize] = {
+      if (attachment.length > MaxAttachmentSize) {
+        Some(new WrongAttachmentSize(s"${attachment.length} > $MaxAttachmentSize"))
+      } else None
+    }
+
+    private[waves] def negativeAmountValidation(amount: Long): Option[WrongAmount] = {
+      if (amount <= 0) {
+        Some(new WrongAmount(s"$amount <= 0"))
+      } else None
+    }
+
+    private[waves] def negativeFeeValidation(fee: Long): Option[WrongFee] = {
+      if (fee <= 0) {
+        Some(new WrongFee(s"$fee <= 0"))
+      } else None
+    }
+
+    private[waves] def overflowValidation(amount: WavesMoney[_ <: Either[Waves.type, Asset]],
+                                          fee: WavesMoney[_ <: Either[Waves.type, Asset]]): Option[Overflow] = {
+      if (amount.currency == fee.currency &&
+        Try(Math.addExact(amount.value, fee.value)).isFailure) {
+        Some(new Overflow(s"${amount.currency}: $amount + $fee = ${amount.value + fee.value}"))
+      } else None
+    }
+
+    private[waves] def overflowValidation(amount: Long,
+                                          fee: Long): Option[Overflow] = {
+      if (Try(Math.addExact(amount, fee)).isFailure) {
+        Some(new Overflow(s"$amount + $fee = ${amount + fee}"))
+      } else None
+    }
+
+    private[waves] def signatureValidation(signature: Signature[Array[Byte]]): Option[WrongSignature] = {
+      if (???) {
+        Some(new WrongSignature(s"Signature is not valid"))
+      } else None
+    }
   }
 
-  object PaymentTransactionValidator extends TransactionValidator[PaymentTransaction] {
-    override def validate(tx: PaymentTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[PaymentTransaction]], PaymentTransaction] = ???
+  object GenesisTransactionValidator extends AbstractTransactionValidator[GenesisTransaction] {
+    override def validate(tx: GenesisTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[GenesisTransaction]], GenesisTransaction] = {
+      val errors = Seq(
+        addressValidation(tx.recipient),
+        negativeAmountValidation(tx.amount)
+      ).flatten
+      if (errors.nonEmpty) Left(errors) else Right(tx)
+    }
   }
 
-  object IssueTransactionValidator extends TransactionValidator[IssueTransaction] {
-    override def validate(tx: IssueTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[IssueTransaction]], IssueTransaction] = ???
+  object PaymentTransactionValidator extends AbstractTransactionValidator[PaymentTransaction] {
+    override def validate(tx: PaymentTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[PaymentTransaction]], PaymentTransaction] = {
+      val errors = Seq(
+        addressValidation(tx.recipient),
+        negativeAmountValidation(tx.amount),
+        negativeFeeValidation(tx.fee),
+        overflowValidation(tx.amount, tx.fee),
+        signatureValidation(tx.signature)
+      ).flatten
+      if (errors.nonEmpty) Left(errors) else Right(tx)
+    }
   }
 
+  object IssueTransactionValidator extends AbstractTransactionValidator[IssueTransaction] {
+    val MaxDescriptionLength = 1000
+    val MaxAssetNameLength = 16
+    val MinAssetNameLength = 4
+    val MinFee = 100000000
+    val MaxDecimals = 8
 
-  object ReissueTransactionValidator extends TransactionValidator[ReissueTransaction] {
-    override def validate(tx: ReissueTransaction)(implicit blockChain: self.type):
-    Either[Seq[TransactionValidationError[ReissueTransaction]], ReissueTransaction] = {
-//      if (tx.sender.isValid) {
-        // todo adress validation error
-//        ???
-//      } else if (quantity <= 0) {
-//        ValidationResult.NegativeAmount
-//      } else if (fee <= 0) {
-//        ValidationResult.InsufficientFee
-//      } else if (!EllipticCurveImpl.verify(tx.signature, tx.toSign, tx.sender.publicKey)) {
-//        ValidationResult.InvalidSignature
-//      } else ValidationResult.ValidateOke
-      ???
+    private[waves] def smallFeeValidation(fee: Long): Option[WrongFee] = {
+      if (fee < MinFee) {
+        Some(new WrongFee(s"$fee < $MinFee"))
+      } else None
+    }
+
+    private[waves] def maxAssetNameLength(assetName: Array[Byte]): Option[WrongAssetName] = {
+      if (assetName.length > MaxAssetNameLength) {
+        Some(new WrongAssetName(s"${assetName.length} > $MaxAssetNameLength"))
+      } else None
+    }
+
+    private[waves] def minAssetNameLength(assetName: Array[Byte]): Option[WrongAssetName] = {
+      if (assetName.length < MinAssetNameLength) {
+        Some(new WrongAssetName(s"${assetName.length} < $MinAssetNameLength"))
+      } else None
+    }
+
+    private[waves] def maxDescriptorNameLength(description: Array[Byte]): Option[WrongAssetDescription] = {
+      if (description.length > MaxDescriptionLength) {
+        Some(new WrongAssetDescription(s"${description.length} > $MaxDescriptionLength"))
+      } else None
+    }
+
+    private[waves] def negativeDecimals(decimals: Int): Option[WrongAssetDecimals] = {
+      if (decimals < 0) {
+        Some(new WrongAssetDecimals(s"$decimals < 0"))
+      } else None
+    }
+
+    private[waves] def maxDecimals(decimals: Int): Option[WrongAssetDecimals] = {
+      if (decimals > MaxDecimals) {
+        Some(new WrongAssetDecimals(s"$decimals > $MaxDecimals"))
+      } else None
+    }
+
+    override def validate(tx: IssueTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[IssueTransaction]], IssueTransaction] = {
+      val errors = Seq(
+        addressValidation(tx.recipient),
+        smallFeeValidation(tx.fee),
+        maxAssetNameLength(tx.name),
+        minAssetNameLength(tx.name),
+        maxDescriptorNameLength(tx.description),
+        negativeDecimals(tx.decimals),
+        maxDecimals(tx.decimals),
+        negativeAmountValidation(tx.amount),
+        overflowValidation(tx.issue, tx.feeMoney),
+        signatureValidation(tx.signature)
+      ).flatten
+      if (errors.nonEmpty) Left(errors) else Right(tx)
+    }
+  }
+
+  object ReissueTransactionValidator extends AbstractTransactionValidator[ReissueTransaction] {
+    override def validate(tx: ReissueTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[ReissueTransaction]], ReissueTransaction] = {
+      val errors = Seq(
+        addressValidation(tx.recipient),
+        negativeAmountValidation(tx.amount),
+        negativeFeeValidation(tx.fee),
+        overflowValidation(tx.issue, tx.feeMoney),
+        signatureValidation(tx.signature)
+      ).flatten
+      if (errors.nonEmpty) Left(errors) else Right(tx)
     }
   }
 
@@ -296,50 +410,20 @@ trait WavesTransactionsValidators {
 
   class WrongSignature(message: => String) extends TransactionValidationError(message)
 
-  object TransferTransactionValidator extends TransactionValidator[TransferTransaction] {
-    private[waves] val MaxAttachmentSize = 140
+  class WrongAssetName(message: => String) extends TransactionValidationError(message)
 
-    private[waves] def addressValidation(address: Address): Option[WrongAddress] = {
-      address.validate.map(error => new WrongAddress(error.message))
-    }
+  class WrongAssetDescription(message: => String) extends TransactionValidationError(message)
 
-    private[waves] def attachmentSizeValidation(attachment: Array[Byte]): Option[WrongAttachmentSize] = {
-      if (attachment.length > MaxAttachmentSize) {
-        Some(new WrongAttachmentSize(s"${attachment.length} > $MaxAttachmentSize"))
-      } else None
-    }
+  class WrongAssetDecimals(message: => String) extends TransactionValidationError(message)
 
-    private[waves] def amountValidation(amount: Long): Option[WrongAmount] = {
-      if (amount <= 0) {
-        Some(new WrongAmount(s"$amount <= 0"))
-      } else None
-    }
-
-    private[waves] def feeValidation(fee: Long): Option[WrongFee] = {
-      if (fee <= 0) {
-        Some(new WrongFee(s"$fee <= 0"))
-      } else None
-    }
-
-    private[waves] def overflowValidation(amount: Long, fee: Long): Option[Overflow] = {
-      if (Try(Math.addExact(amount, fee)).isFailure) {
-        Some(new Overflow(s"$amount + $fee = ${amount + fee}"))
-      } else None
-    }
-
-    private[waves] def signatureValidation(signature: Signature[Array[Byte]]): Option[WrongSignature] = {
-      if (???) {
-        Some(new WrongSignature(s"Signature is not valid"))
-      } else None
-    }
-
+  object TransferTransactionValidator extends AbstractTransactionValidator[TransferTransaction] {
     override def validate(tx: TransferTransaction)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[TransferTransaction]], TransferTransaction] = {
       val errors = Seq(
         addressValidation(tx.recipient),
         attachmentSizeValidation(tx.attachment),
-        amountValidation(tx.amount),
-        feeValidation(tx.fee),
-        overflowValidation(tx.amount, tx.fee),
+        negativeAmountValidation(tx.amount),
+        negativeFeeValidation(tx.fee),
+        overflowValidation(tx.transfer, tx.feeMoney),
         signatureValidation(tx.signature)
       ).flatten
       if (errors.nonEmpty) Left(errors) else Right(tx)
