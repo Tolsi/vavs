@@ -15,8 +15,8 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics" % "metrics-core" % "3.1.+",
   "io.dropwizard.metrics" % "metrics-jvm" % "3.1.+",
   "org.coursera" % "dropwizard-metrics-datadog" % "1.1.+",
-  "com.typesafe.akka" %% "akka-testkit" % "2.4.+" % Test,
 
+  "com.google.guava" % "guava" % "20.0",
   "com.esotericsoftware" % "kryo" % "4.0.0",
   "com.twitter" %% "chill" % "0.8.0",
   "com.typesafe" % "config" % "1.3.+",
@@ -30,7 +30,7 @@ libraryDependencies ++= Seq(
 
   "com.typesafe.akka" %% "akka-http-experimental" % "2.4.8",
 
-  "com.typesafe.akka" %% "akka-testkit" % "2.4.8" % "test",
+  "com.typesafe.akka" %% "akka-testkit" % "2.4.+" % "test",
   "org.scalatest" %% "scalatest" % "2.+" % "test",
   "org.scalactic" %% "scalactic" % "2.+" % "test",
   "org.scalacheck" %% "scalacheck" % "1.12.+" % "test"
