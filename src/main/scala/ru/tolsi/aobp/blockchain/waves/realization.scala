@@ -340,9 +340,9 @@ trait WavesTransactionsValidators {
         case Right(_) =>
           val signatureError = signatureValidation(stx, stx.signature)
           if (signatureError.isDefined) {
-            Left[Seq[TransactionValidationError[STX]], STX](Seq[TransactionValidationError[STX]](signatureError.get))
+            Left(Seq(signatureError.get))
           } else {
-            Right[Seq[TransactionValidationError[STX]], STX](stx)
+            Right(stx)
           }
       }
     }
