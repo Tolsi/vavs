@@ -333,15 +333,18 @@ trait WavesTransactionsValidators {
     }
 
     override def validate(stx: STX)(implicit blockChain: WavesTransactionsValidators.this.type): Either[Seq[TransactionValidationError[STX]], STX] = {
-//      txValidator.validate(stx.signed).right.flatMap(_ => {
-//        val signatureError = signatureValidation(stx, stx.signature)
-//        if (signatureError.isDefined) {
-//          Left(Seq(signatureError).flatten)
-//        } else {
-//          Right(stx)
-//        }
-//      })
-      ???
+      txValidator.validate(stx.signed) match {
+        case Left(errors) =>
+          // todo it works?
+          Left(errors.map(_.asInstanceOf[TransactionValidationError[STX]]))
+        case Right(_) =>
+          val signatureError = signatureValidation(stx, stx.signature)
+          if (signatureError.isDefined) {
+            Left[Seq[TransactionValidationError[STX]], STX](Seq[TransactionValidationError[STX]](signatureError.get))
+          } else {
+            Right[Seq[TransactionValidationError[STX]], STX](stx)
+          }
+      }
     }
   }
 
@@ -448,7 +451,7 @@ trait WavesTransactionsValidators {
 
   class Overflow(message: => String) extends TransactionValidationError(message)
 
-  class WrongSignature(message: => String) extends SignedTransactionValidationError(message)
+  class WrongSignature(message: => String) extends TransactionValidationError(message)
 
   class WrongAssetName(message: => String) extends TransactionValidationError(message)
 

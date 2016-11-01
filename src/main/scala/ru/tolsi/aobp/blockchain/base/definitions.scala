@@ -66,7 +66,6 @@ trait BlockChain {
   protected abstract class BlockChainAddress(val address: Array[Byte]) extends Validable
 
   abstract class TransactionValidationError[+TX <: T](message: => String) extends AbstractValidationError[TX](message)
-  abstract class SignedTransactionValidationError[+TX <: T](message: => String) extends TransactionValidationError[TX](message)
 
   abstract class BlockValidationError[+BL <: B](message: => String) extends AbstractValidationError[BL](message)
   abstract class SignedBlockValidationError[+BL <: B](message: => String) extends BlockValidationError[BL](message)
