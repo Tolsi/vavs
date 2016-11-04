@@ -1,8 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves.crypto
 
+import ru.tolsi.aobp.blockchain.base.{Signature64 => BaseSignature64}
 import scorex.crypto.encode.Base58
 import scorex.crypto.signatures.Curve25519
-import ru.tolsi.aobp.blockchain.base.{Signature64 => BaseSignature64}
 
 private[waves] class Signature64(val bytes: Array[Byte]) extends BaseSignature64(bytes) {
   assert(bytes.length == Signature64.Length,

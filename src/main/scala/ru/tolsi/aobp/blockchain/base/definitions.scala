@@ -81,6 +81,8 @@ trait BlockChain {
 
   protected def txValidator: SignedTransactionValidator[T, ST[T]]
 
+  protected def utxValidator: SignedTransactionValidator[T, ST[T]]
+
   protected def blockValidator: SignedBlockValidator[B, SB[B]]
 }
 

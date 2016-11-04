@@ -15,15 +15,19 @@ package object waves {
   type ArraySignature64 = Signature64[Array[Byte]]
 
   sealed trait WavesСurrency
+
   case object Waves extends WavesСurrency
+
   case class Asset(id: Array[Byte]) extends WavesСurrency {
     override def equals(obj: scala.Any): Boolean = obj match {
       case Asset(otherId) => id sameElements otherId
     }
+
     override def hashCode(): Int = {
       LyHash.compute(id)
     }
   }
 
   case class WavesMoney[C <: Either[Waves.type, Asset]](value: Long, currency: C)
+
 }
