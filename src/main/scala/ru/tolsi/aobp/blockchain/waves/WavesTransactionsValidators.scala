@@ -82,9 +82,10 @@ trait WavesTransactionsValidators {
     extends AbstractSignedTransactionWithTimeValidator[ST[T]](blockTimestamp) {
 
     private[waves] def timestampValidation(tx: ST[T], blockTimestamp: Long): Option[WrongTimestamp] = {
-      // todo filter 2 hours from past
       if (tx.timestamp - blockTimestamp < configuration.maxTimeDriftMillis) {
-        Some(new WrongTimestamp(s"${tx.timestamp} - $blockTimestamp < ${configuration.maxTimeDriftMillis}"))
+        Some(new WrongTimestamp(s"Transaction is far away in future: ${tx.timestamp} - $blockTimestamp < ${configuration.maxTimeDriftMillis}"))
+      } else if (blockTimestamp - tx.timestamp < configuration.maxTxAndBlockDiffMillis) {
+        Some(new WrongTimestamp(s"Transaction is too old: $blockTimestamp - ${tx.timestamp} < ${configuration.maxTxAndBlockDiffMillis}"))
       } else None
     }
 

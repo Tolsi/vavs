@@ -31,7 +31,7 @@ trait WavesConfiguration {
     override val maxTxAndBlockDiffMillis = 2.hour.toMillis
     override val maxTransactionsPerBlock = 100
 
-    override val genesisGenerationSignature = Array.fill(32)(0: Byte)
+    override val genesisGenerationSignature = new Signature32(Array.fill(32)(0.toByte))
     override val genesisGeneratorAccount: Account = Account(Array.fill(32)(0.toByte))
     override val genesisSignature: Signature64 = new Signature64(Array.fill(64)(0.toByte))
   }

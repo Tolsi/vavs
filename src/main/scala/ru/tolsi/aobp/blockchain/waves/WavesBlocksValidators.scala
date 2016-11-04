@@ -41,12 +41,11 @@ trait WavesBlocksValidators {
 
     override def validate(b: WavesBlock): Either[Seq[BlockValidationError[WavesBlock]], WavesBlock] = {
       b match {
+          // todo validate transactions
         case b: GenesisBlock => implicitlyValidate(b)
         case b: BaseBlock => implicitlyValidate(b)
       }
     }
   }
-  override protected def blockValidator: AbstractSignedBlockValidator[WavesBlock, SB[WavesBlock]] = {
-    new SignedBlockValidator
-  }
+  override protected val blockValidator: AbstractSignedBlockValidator[WavesBlock, SB[WavesBlock]] = new SignedBlockValidator
 }

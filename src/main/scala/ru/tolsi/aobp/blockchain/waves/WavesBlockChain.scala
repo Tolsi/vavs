@@ -11,6 +11,8 @@ private[waves] abstract class WavesBlockChain extends BlockChain
   with WavesAccounts
   with WavesBlocks
   with WavesBlocksValidators
+  with WavesBlocksSigns
+  with WavesBlocksSigners
   with WavesConfiguration {
   final type T = WavesTransaction
   final type ST[TX <: T] = SignedTransaction[TX]
