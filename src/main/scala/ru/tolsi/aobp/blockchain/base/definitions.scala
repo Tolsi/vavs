@@ -35,9 +35,13 @@ abstract class ArrayByteSignature extends Signature[Array[Byte]] {
   override def toString: String = Base58.encode(value)
 }
 
-class Signature32(val value: Array[Byte]) extends Signature[Array[Byte]]
+class Signature32(val value: Array[Byte]) extends Signature[Array[Byte]] {
+  require(value.length == 32, "Signature32 should have 32 bytes")
+}
 
-class Signature64(val value: Array[Byte]) extends Signature[Array[Byte]]
+class Signature64(val value: Array[Byte]) extends Signature[Array[Byte]] {
+  require(value.length == 64, "Signature64 should have 64 bytes")
+}
 
 sealed trait Validable
 
