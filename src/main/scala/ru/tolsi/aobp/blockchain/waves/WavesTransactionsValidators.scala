@@ -1,6 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import ru.tolsi.aobp.blockchain.base.{Signature, Signer}
+import ru.tolsi.aobp.blockchain.base.{Signature, Signature64, Signer}
 
 import scala.util.{Left, Right, Try}
 
@@ -51,11 +51,10 @@ trait WavesTransactionsValidators {
     }
   }
 
-  implicit object AnySignedTransactionValidator extends AbstractSignedTransactionValidator[T, ST[T]] {
-    val signer = implicitly[Signer[WavesBlockChain, T, Array[Byte], ArraySignature64]]
-    private[waves] def signatureValidation(tx: ST[T], signature: Signature[Array[Byte]]): Option[WrongSignature] = {
-      // todo rewrite
-      if (signer.sign(tx.signed).signature.value sameElements tx.signature.value) {
+  implicit object SignedTransactionValidator extends AbstractSignedTransactionValidator[T, ST[T]] {
+    val signer = implicitly[Signer[WavesBlockChain, T, Signature64]]
+    private[waves] def signatureValidation(tx: ST[T]): Option[WrongSignature] = {
+      if (signer.sign(tx.signed).signature != tx.signature) {
         Some(new WrongSignature(s"Signature is not valid"))
       } else None
     }
@@ -66,7 +65,7 @@ trait WavesTransactionsValidators {
           // todo it works? see definitions todo if not
           Left(errors.map(_.asInstanceOf[TransactionValidationError[ST[T]]]))
         case Right(_) =>
-          val signatureError = signatureValidation(stx, stx.signature)
+          val signatureError = signatureValidation(stx)
           if (signatureError.isDefined) {
             Left(Seq(signatureError.get))
           } else {
@@ -76,15 +75,16 @@ trait WavesTransactionsValidators {
     }
   }
 
-  class AnySignedTransactionWithTimeValidator(blockTimestamp: Long)
-                                                           (implicit signer: Signer[WavesBlockChain, T, Array[Byte], ArraySignature64],
+  class SignedTransactionWithTimeValidator(blockTimestamp: Long)
+                                          (implicit signer: Signer[WavesBlockChain, T, Signature64],
                                                                           txValidator: TransactionValidator[T],
                                                                           signedTxValidator: AbstractSignedTransactionValidator[T, ST[T]])
     extends AbstractSignedTransactionWithTimeValidator[ST[T]](blockTimestamp) {
 
     private[waves] def timestampValidation(tx: ST[T], blockTimestamp: Long): Option[WrongTimestamp] = {
+      // todo filter 2 hours from past
       if (tx.timestamp - blockTimestamp < configuration.maxTimeDriftMillis) {
-        Some(new WrongTimestamp(s"Signature is not valid"))
+        Some(new WrongTimestamp(s"${tx.timestamp} - $blockTimestamp < ${configuration.maxTimeDriftMillis}"))
       } else None
     }
 
@@ -234,8 +234,9 @@ trait WavesTransactionsValidators {
       validator.validate(tx)
     }
     override def validate(tx: T):
-    Either[Seq[TransactionValidationError[Transaction]], Transaction] = {
+    Either[Seq[TransactionValidationError[WavesTransaction]], WavesTransaction] = {
       tx match {
+        // todo all state changes validation
         case tx: GenesisTransaction => implicitlyValidate(tx)
         case tx: PaymentTransaction => implicitlyValidate(tx)
         case tx: IssueTransaction => implicitlyValidate(tx)
@@ -246,11 +247,11 @@ trait WavesTransactionsValidators {
   }
 
   // todo make object and implicitly?
-  class SignedTransactionValidator(implicit signer: Signer[WavesBlockChain, T, Array[Byte], ArraySignature64],
+  class SignedTransactionValidator(implicit signer: Signer[WavesBlockChain, T, Signature64],
                                    unsignedTxValidator: TransactionValidator[T],
                                    signedValidator: AbstractSignedTransactionValidator[T, ST[T]]
                                   ) extends AbstractSignedTransactionValidator[T, ST[T]] {
-    override def validate(stx: SignedTransaction[Transaction]): Either[Seq[TransactionValidationError[SignedTransaction[Transaction]]], SignedTransaction[Transaction]] = {
+    override def validate(stx: SignedTransaction[WavesTransaction]): Either[Seq[TransactionValidationError[SignedTransaction[WavesTransaction]]], SignedTransaction[WavesTransaction]] = {
       unsignedTxValidator.validate(stx) match {
         case Left(errors)=>
           // todo it works? see definitions todo if not
@@ -261,10 +262,10 @@ trait WavesTransactionsValidators {
     }
   }
 
-  override protected def txValidator(bvp: TVP): AnySignedTransactionWithTimeValidator = {
-    val signer = implicitly[Signer[WavesBlockChain, T, Array[Byte], ArraySignature64]]
-    new AnySignedTransactionWithTimeValidator(bvp.blockTimestamp)(signer, UnsignedTransactionValidator,
-      new SignedTransactionValidator()(signer, UnsignedTransactionValidator, new AnySignedTransactionWithTimeValidator(bvp.blockTimestamp)))
+  override protected def txValidator(bvp: TVP): SignedTransactionWithTimeValidator = {
+    val signer = implicitly[Signer[WavesBlockChain, T, Signature64]]
+    new SignedTransactionWithTimeValidator(bvp.blockTimestamp)(signer, UnsignedTransactionValidator,
+      new SignedTransactionValidator()(signer, UnsignedTransactionValidator, new SignedTransactionWithTimeValidator(bvp.blockTimestamp)))
   }
 
 }

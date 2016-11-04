@@ -1,7 +1,6 @@
 package ru.tolsi.aobp.blockchain
 
-import ru.tolsi.aobp.blockchain.base.{Signature32, Signature64}
-import ru.tolsi.aobp.blockchain.waves.crypto.LyHash
+import ru.tolsi.aobp.blockchain.base.LyHash
 
 import scala.util.Either
 
@@ -10,9 +9,6 @@ package object waves {
   type PrivateKey = Array[Byte]
   type Address = Array[Byte]
   type PublicKey = Array[Byte]
-
-  type ArraySignature32 = Signature32[Array[Byte]]
-  type ArraySignature64 = Signature64[Array[Byte]]
 
   sealed trait WavesСurrency
 

@@ -1,14 +1,16 @@
 package ru.tolsi.aobp.blockchain.base
 
+import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializable
 import rx.Observable
+import scorex.crypto.encode.Base58
 
 trait Sign[V]
-trait WithSign[V, S <: Sign[V]]
 case class ArraySign(value: Array[Byte]) extends Sign[Array[Byte]]
-trait SignCreator[WS <: WithSign[S, SI], S, SI <: Sign[S]] {
-  def createSign(ws: WS): SI
+trait WithArraySign
+trait ArraySignCreator[WAS <: WithArraySign] {
+  def createSign(ws: WAS): ArraySign
 }
-trait WithByteArraySing extends WithSign[Array[Byte], ArraySign]
+trait WithByteArraySing extends WithArraySign
 
 trait Signable
 
@@ -16,13 +18,26 @@ abstract class Signature[V] {
   def value: V
 }
 
-abstract class Signer[BC <: BlockChain, S <: Signable with WithByteArraySing, V, SI <: Signature[V]] {
-  def sign(obj: S): Signed[S, V, SI]
+abstract class Signer[BC <: BlockChain, S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]] {
+  def sign(obj: S): Signed[S, SI]
 }
 
-class Signature32[V](val value: V) extends Signature[V]
+abstract class ArrayByteSignature extends Signature[Array[Byte]] {
+  override def hashCode(): Int = {
+    LyHash.compute(value)
+  }
 
-class Signature64[V](val value: V) extends Signature[V]
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case as: ArrayByteSignature => as.value sameElements value
+    case _ => false
+  }
+
+  override def toString: String = Base58.encode(value)
+}
+
+class Signature32(val value: Array[Byte]) extends Signature[Array[Byte]]
+
+class Signature64(val value: Array[Byte]) extends Signature[Array[Byte]]
 
 sealed trait Validable
 
@@ -30,7 +45,7 @@ abstract class AbstractValidationError[+V <: Validable](m: => String) {
   def message: String = m
 }
 
-trait Signed[+S <: Signable with WithByteArraySing, V, SI <: Signature[V]] {
+trait Signed[+S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]] {
   def signature: SI
   def signed: S
 }
@@ -44,20 +59,19 @@ abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, E <: Abst
 
 trait BlockChain {
 
-  protected abstract class BlockChainBlock extends WithByteArraySing with Signable with Validable {
+  protected abstract class BlockChainBlock extends WithByteArraySing with Signable with Validable with BytesSerializable {
     type Id
   }
 
-  protected abstract class BlockChainTransaction extends WithByteArraySing with Signable with Validable with StateChangeReason
+  protected abstract class BlockChainTransaction extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable
 
-  protected trait BlockChainSignedTransaction[TX <: T, V, SI <: Signature[V]] extends BlockChainTransaction with Signed[TX, V, SI]
-    with Validable {
+  protected trait BlockChainSignedTransaction[TX <: T, SI <: Signature[Array[Byte]]] extends BlockChainTransaction with Signed[TX, SI] {
 
     protected trait ValidationError extends AbstractValidationError[this.type]
 
   }
 
-  protected trait BlockChainSignedBlock[BL <: B, V, SI <: Signature[V]] extends BlockChainBlock with Validable with Signed[BL, V, SI] {
+  protected trait BlockChainSignedBlock[BL <: B, SI <: Signature[Array[Byte]]] extends BlockChainBlock with Signed[BL, SI] {
 
     protected trait ValidationError extends AbstractValidationError[this.type]
 
@@ -66,13 +80,14 @@ trait BlockChain {
   trait BlockTransactionParameters
 
   type T <: BlockChainTransaction
-  type ST[TX <: T] <: Signed[TX, Array[Byte], Signature64[Array[Byte]]] with T
+  type ST[TX <: T] <: Signed[TX, Signature64] with T
   type B <: BlockChainBlock
-  type SB[BL <: B] <: Signed[BL, Array[Byte], Signature64[Array[Byte]]] with B
+  type SB[BL <: B] <: Signed[BL, Signature64] with B
   type AС <: BlockChainAccount
   type AD <: BlockChainAddress
   type TXV <: AbstractSignedTransactionValidator[T, ST[T]]
   type TVP <: BlockTransactionParameters
+  type SBV <: AbstractSignedBlockValidator[B, SB[B]]
 
   protected abstract class BlockChainAccount(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
 
@@ -87,14 +102,14 @@ trait BlockChain {
 
   protected abstract class AbstractSignedTransactionValidator[TX <: T, STX <: ST[TX]] extends ValidatorOnBlockChain[this.type, STX, TransactionValidationError[STX]]
 
-  protected abstract class BlockValidator[BL <: B] extends ValidatorOnBlockChain[this.type, BL,  BlockValidationError[BL]]
-  protected abstract class SignedBlockValidator[BL <: B, SBL <: SB[BL]] extends ValidatorOnBlockChain[this.type, SBL, SignedBlockValidationError[SBL]]
+  protected abstract class AbstractBlockValidator[BL <: B] extends ValidatorOnBlockChain[this.type, BL,  BlockValidationError[BL]]
+  protected abstract class AbstractSignedBlockValidator[BL <: B, SBL <: SB[BL]] extends ValidatorOnBlockChain[this.type, SBL, SignedBlockValidationError[SBL]]
 
   protected def genesis: B
 
   protected def txValidator(bvp: TVP): TXV
 
-  protected def blockValidator: SignedBlockValidator[B, SB[B]]
+  protected def blockValidator: SBV
 }
 
 

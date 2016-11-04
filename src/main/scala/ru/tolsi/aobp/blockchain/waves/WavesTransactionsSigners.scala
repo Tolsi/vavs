@@ -3,12 +3,11 @@ package ru.tolsi.aobp.blockchain.waves
 import com.google.common.primitives.{Bytes, Ints, Longs, Shorts}
 import org.whispersystems.curve25519.Curve25519
 import ru.tolsi.aobp.blockchain.base._
-import ru.tolsi.aobp.blockchain.waves.crypto.Signature64
 
 private[waves] trait WavesTransactionsSigners {
   this: WavesBlockChain =>
 
-  abstract class WavesSigner[S <: Signable with WithByteArraySing, V, SI <: Signature[V]] extends Signer[WavesBlockChain, S, V, SI] {
+  abstract class WavesSigner[S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]] extends Signer[WavesBlockChain, S, SI] {
     // todo move to bytes serializer
     protected def arrayWithSize(b: Array[Byte]): Array[Byte] = Shorts.toByteArray(b.length.toShort) ++ b
 
@@ -17,27 +16,27 @@ private[waves] trait WavesTransactionsSigners {
     protected def writeArrayOption(a: Option[Array[Byte]]): Array[Byte] = a.map(a => (1: Byte) +: a).getOrElse(Array(0: Byte))
   }
 
-  implicit object GenesisTransactionSigner extends WavesSigner[GenesisTransaction, Array[Byte], ArraySignature64] {
+  implicit object GenesisTransactionSigner extends WavesSigner[GenesisTransaction, Signature64] {
     val TypeLength = 1
     val TimestampLength = 8
     val AmountLength = 8
 
-    override def sign(tx: GenesisTransaction): Signed[GenesisTransaction, Array[Byte], ArraySignature64] = {
+    override def sign(tx: GenesisTransaction): Signed[GenesisTransaction, Signature64] = {
       val typeBytes = Bytes.ensureCapacity(Ints.toByteArray(TransactionType.GenesisTransaction.id), TypeLength, 0)
       val timestampBytes = Bytes.ensureCapacity(Longs.toByteArray(tx.timestamp), TimestampLength, 0)
       val amountBytes = Bytes.ensureCapacity(Longs.toByteArray(tx.amount), AmountLength, 0)
       val sign = Bytes.concat(typeBytes, timestampBytes, tx.recipient.address, amountBytes)
 
       val h = fastHash(sign)
-      val signature = Signature64(Bytes.concat(h, h))
+      val signature = new Signature64(Bytes.concat(h, h))
       SignedTransaction(tx, signature)
     }
   }
 
-  implicit object PaymentTransactionSigner extends WavesSigner[PaymentTransaction, Array[Byte], ArraySignature64]
-    with SignCreator[PaymentTransaction, Array[Byte], ArraySign] {
-    override def sign(tx: PaymentTransaction): Signed[PaymentTransaction, Array[Byte], ArraySignature64] = {
-      val signature = Signature64(createSign(tx).value)
+  implicit object PaymentTransactionSigner extends WavesSigner[PaymentTransaction, Signature64]
+    with ArraySignCreator[PaymentTransaction] {
+    override def sign(tx: PaymentTransaction): Signed[PaymentTransaction, Signature64] = {
+      val signature = new Signature64(createSign(tx).value)
       SignedTransaction(tx, signature)
     }
 
@@ -51,10 +50,10 @@ private[waves] trait WavesTransactionsSigners {
     }
   }
 
-  implicit object IssueTransactionSigner extends WavesSigner[IssueTransaction, Array[Byte], ArraySignature64]
-    with SignCreator[IssueTransaction, Array[Byte], ArraySign] {
-    override def sign(tx: IssueTransaction): Signed[IssueTransaction, Array[Byte], ArraySignature64] = {
-      val signature = Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
+  implicit object IssueTransactionSigner extends WavesSigner[IssueTransaction, Signature64]
+    with ArraySignCreator[IssueTransaction] {
+    override def sign(tx: IssueTransaction): Signed[IssueTransaction, Signature64] = {
+      val signature = new Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
         createSign(tx).value))
       SignedTransaction(tx, signature)
     }
@@ -68,10 +67,10 @@ private[waves] trait WavesTransactionsSigners {
     }
   }
 
-  implicit object ReissueTransactionSigner extends WavesSigner[ReissueTransaction, Array[Byte], ArraySignature64]
-    with SignCreator[ReissueTransaction, Array[Byte], ArraySign] {
-    override def sign(tx: ReissueTransaction): Signed[ReissueTransaction, Array[Byte], ArraySignature64] = {
-      val signature = Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
+  implicit object ReissueTransactionSigner extends WavesSigner[ReissueTransaction, Signature64]
+    with ArraySignCreator[ReissueTransaction] {
+    override def sign(tx: ReissueTransaction): Signed[ReissueTransaction, Signature64] = {
+      val signature = new Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
         createSign(tx).value))
       SignedTransaction(tx, signature)
     }
@@ -84,10 +83,10 @@ private[waves] trait WavesTransactionsSigners {
     }
   }
 
-  implicit object TransferTransactionSigner extends WavesSigner[TransferTransaction, Array[Byte], ArraySignature64]
-    with SignCreator[TransferTransaction, Array[Byte], ArraySign] {
-    override def sign(tx: TransferTransaction): Signed[TransferTransaction, Array[Byte], ArraySignature64] = {
-      val signature = Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
+  implicit object TransferTransactionSigner extends WavesSigner[TransferTransaction, Signature64]
+    with ArraySignCreator[TransferTransaction] {
+    override def sign(tx: TransferTransaction): Signed[TransferTransaction, Signature64] = {
+      val signature = new Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
         createSign(tx).value))
       SignedTransaction(tx, signature)
     }
@@ -107,12 +106,12 @@ private[waves] trait WavesTransactionsSigners {
     }
   }
 
-  implicit object TransactionSigner extends WavesSigner[T, Array[Byte], ArraySignature64] {
-    private def implicitlySign[TX <: T](tx: TX)(implicit signer: WavesSigner[TX, Array[Byte], ArraySignature64]): Signed[TX, Array[Byte], ArraySignature64] = {
+  implicit object TransactionSigner extends WavesSigner[T, Signature64] {
+    private def implicitlySign[TX <: T](tx: TX)(implicit signer: WavesSigner[TX, Signature64]): Signed[TX, Signature64] = {
       signer.sign(tx)
     }
 
-    override def sign(tx: Transaction): Signed[Transaction, Array[Byte], ArraySignature64] = {
+    override def sign(tx: WavesTransaction): Signed[WavesTransaction, Signature64] = {
       tx match {
         case tx: GenesisTransaction => implicitlySign(tx)
         case tx: PaymentTransaction => implicitlySign(tx)

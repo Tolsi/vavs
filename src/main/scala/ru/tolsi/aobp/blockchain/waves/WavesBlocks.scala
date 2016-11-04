@@ -1,37 +1,65 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import ru.tolsi.aobp.blockchain.base.{Signed, ValidatorOnBlockChain}
+import ru.tolsi.aobp.blockchain.base.{Signature32, Signature64, Signed}
 
 private[waves] trait WavesBlocks {
   this: WavesBlockChain =>
 
-  abstract class WavesBlock extends BlockChainBlock {
-    override type Id = ArraySignature32
+  abstract sealed class WavesBlock extends BlockChainBlock {
+    override type Id = Signature32
 
-    val version: Byte
-    val timestamp: Long
-    val reference: ArraySignature64
+    def version: Byte
 
-    def transactions: Seq[Signed[Transaction, Array[Byte], ArraySignature64]]
+    def timestamp: Long
 
-    val baseTarget: Long
-    val generatorSignature: ArraySignature32
+    def reference: Signature64
+
+    def baseTarget: Long
+
+    // fasthash(lastBlockData.generationSignature ++ generator.publicKey)
+    def generationSignature: Signature32
+
+    def transactions: Seq[Signed[WavesTransaction, Signature64]]
+
+    def generator: Account
   }
 
-  class GenesisBlock(val timestamp: Long,
-                     val reference: ArraySignature64,
-                     val transactions: Seq[Signed[Transaction, Array[Byte], ArraySignature64]],
-                     val baseTarget: Long,
-                     val generatorSignature: ArraySignature32) extends WavesBlock {
+  case class SignedBlock[BL <: B](block: BL, signature: Signature64) extends WavesBlock with BlockChainSignedBlock[BL, Signature64] {
+    override def version: Byte = block.version
+
+    override def timestamp: Long = block.timestamp
+
+    override def reference: Signature64 = block.reference
+
+    override def transactions: Seq[Signed[WavesTransaction, Signature64]] = block.transactions
+
+    override def baseTarget: Long = block.baseTarget
+
+    override def generator: Account = block.generator
+
+    override def generationSignature: Signature32 = block.generationSignature
+
+    override def signed: BL = block
+  }
+
+  case class GenesisBlock(timestamp: Long,
+                          reference: Signature64,
+                          baseTarget: Long,
+                          generationSignature: Signature32,
+                          generator: Account,
+                          transactions: Seq[Signed[WavesTransaction, Signature64]]
+                         ) extends WavesBlock {
     val version: Byte = 2
   }
 
 
-  class Block(val timestamp: Long,
-              val reference: ArraySignature64,
-              val transactions: Seq[Signed[Transaction, Array[Byte], ArraySignature64]],
-              val baseTarget: Long,
-              val generatorSignature: ArraySignature32) extends WavesBlock {
+  case class BaseBlock(timestamp: Long,
+                       reference: Signature64,
+                       transactions: Seq[Signed[WavesTransaction, Signature64]],
+                       baseTarget: Long,
+                       generationSignature: Signature32,
+
+                       generator: Account) extends WavesBlock {
     val version: Byte = 3
   }
 

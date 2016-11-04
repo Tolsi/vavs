@@ -1,5 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves
 
+import ru.tolsi.aobp.blockchain.base.Signature64
+
 private[waves] trait WavesTransactions {
   this: WavesBlockChain =>
 
@@ -11,7 +13,7 @@ private[waves] trait WavesTransactions {
     val ReissueTransaction = Value(5)
   }
 
-  abstract class Transaction extends BlockChainTransaction {
+  abstract sealed class WavesTransaction extends BlockChainTransaction {
     def typeId: TransactionType.Value
 
     val recipient: Address
@@ -30,7 +32,7 @@ private[waves] trait WavesTransactions {
     //  def balanceChanges(): Seq[(WavesAccount, Long)]
   }
 
-  case class SignedTransaction[TX <: T](tx: TX, signature: ArraySignature64) extends Transaction with BlockChainSignedTransaction[TX, Array[Byte], ArraySignature64] {
+  case class SignedTransaction[TX <: T](tx: TX, signature: Signature64) extends WavesTransaction with BlockChainSignedTransaction[TX, Signature64] {
     override def signed: TX = tx
 
     override def typeId: TransactionType.Value = tx.typeId
@@ -48,7 +50,7 @@ private[waves] trait WavesTransactions {
     override def feeCurrency: WavesСurrency = tx.feeCurrency
   }
 
-  case class GenesisTransaction(recipient: Address, timestamp: Long, amount: Long) extends Transaction {
+  case class GenesisTransaction(recipient: Address, timestamp: Long, amount: Long) extends WavesTransaction {
     override val typeId = TransactionType.GenesisTransaction
 
     override val fee: Long = 0
@@ -62,7 +64,7 @@ private[waves] trait WavesTransactions {
                                 override val recipient: Address,
                                 override val amount: Long,
                                 override val fee: Long,
-                                override val timestamp: Long) extends Transaction {
+                                override val timestamp: Long) extends WavesTransaction {
     override def typeId = TransactionType.PaymentTransaction
 
     override def currency: WavesСurrency = Waves
@@ -70,7 +72,7 @@ private[waves] trait WavesTransactions {
     override def feeCurrency: WavesСurrency = Waves
   }
 
-  sealed trait AssetIssuanceTransaction extends Transaction {
+  sealed trait AssetIssuanceTransaction extends WavesTransaction {
     def issue: WavesMoney[Right[Waves.type, Asset]]
 
     def reissuable: Boolean
@@ -120,7 +122,7 @@ private[waves] trait WavesTransactions {
                                  recipient: Address,
                                  transfer: WavesMoney[Either[Waves.type, Asset]],
                                  feeMoney: WavesMoney[Either[Waves.type, Asset]],
-                                 attachment: Array[Byte]) extends Transaction {
+                                 attachment: Array[Byte]) extends WavesTransaction {
     override def typeId = TransactionType.TransferTransaction
 
     override def amount: Long = transfer.value
