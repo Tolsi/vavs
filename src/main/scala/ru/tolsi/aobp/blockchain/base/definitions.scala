@@ -9,7 +9,7 @@ abstract class Signature[V] {
 }
 
 abstract class Signer[BC <: BlockChain, S <: Signable, V, SI <: Signature[V]] {
-  def sign(obj: S)(implicit blockChain: BC): Signed[S, V, SI]
+  def sign(obj: S): Signed[S, V, SI]
 }
 
 class Signature32[V](val value: V) extends Signature[V]
@@ -22,15 +22,16 @@ abstract class AbstractValidationError[+V <: Validable](m: => String) {
   def message: String = m
 }
 
-trait Signed[S <: Signable, V, SI <: Signature[V]] {
+trait Signed[+S <: Signable, V, SI <: Signature[V]] {
   def signature: SI
   def signed: S
 }
 
 trait StateChangeReason
 
+// todo VE, E <: AbstractValidationError[VE] ?
 abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, E <: AbstractValidationError[V]] {
-  def validate(tx: V)(implicit blockChain: BC): Either[Seq[E], V]
+  def validate(tx: V): Either[Seq[E], V]
 }
 
 trait BlockChain {
@@ -54,12 +55,16 @@ trait BlockChain {
 
   }
 
+  trait BlockTransactionParameters
+
   type T <: BlockChainTransaction
   type ST[TX <: T] <: Signed[TX, Array[Byte], Signature64[Array[Byte]]] with T
   type B <: BlockChainBlock
   type SB[BL <: B] <: Signed[BL, Array[Byte], Signature64[Array[Byte]]] with B
   type AС <: BlockChainAccount
   type AD <: BlockChainAddress
+  type TXV <: AbstractSignedTransactionValidator[T, ST[T]]
+  type TVP <: BlockTransactionParameters
 
   protected abstract class BlockChainAccount(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
 
@@ -72,16 +77,14 @@ trait BlockChain {
 
   protected abstract class TransactionValidator[TX <: T] extends ValidatorOnBlockChain[this.type, TX, TransactionValidationError[TX]]
 
-  protected abstract class SignedTransactionValidator[TX <: T, STX <: ST[TX]] extends ValidatorOnBlockChain[this.type, STX, TransactionValidationError[STX]]
+  protected abstract class AbstractSignedTransactionValidator[TX <: T, STX <: ST[TX]] extends ValidatorOnBlockChain[this.type, STX, TransactionValidationError[STX]]
 
   protected abstract class BlockValidator[BL <: B] extends ValidatorOnBlockChain[this.type, BL,  BlockValidationError[BL]]
   protected abstract class SignedBlockValidator[BL <: B, SBL <: SB[BL]] extends ValidatorOnBlockChain[this.type, SBL, SignedBlockValidationError[SBL]]
 
   protected def genesis: B
 
-  protected def txValidator: SignedTransactionValidator[T, ST[T]]
-
-  protected def utxValidator: SignedTransactionValidator[T, ST[T]]
+  protected def txValidator(bvp: TVP): TXV
 
   protected def blockValidator: SignedBlockValidator[B, SB[B]]
 }

@@ -1,11 +1,11 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import ru.tolsi.aobp.blockchain.base.Signed
+import ru.tolsi.aobp.blockchain.base.{Signed, ValidatorOnBlockChain}
 
 private[waves] trait WavesBlocks {
   this: WavesBlockChain =>
 
-  trait WavesBlock extends BlockChainBlock {
+  abstract class WavesBlock extends BlockChainBlock {
     override type Id = ArraySignature32
 
     val version: Byte

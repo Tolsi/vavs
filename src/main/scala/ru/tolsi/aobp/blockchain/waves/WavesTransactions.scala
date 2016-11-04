@@ -70,7 +70,7 @@ private[waves] trait WavesTransactions {
     override def feeCurrency: WavesСurrency = Waves
   }
 
-  trait AssetIssuanceTransaction extends Transaction {
+  sealed trait AssetIssuanceTransaction extends Transaction {
     def issue: WavesMoney[Right[Waves.type, Asset]]
 
     def reissuable: Boolean
