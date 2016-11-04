@@ -2,13 +2,23 @@ package ru.tolsi.aobp.blockchain.base
 
 import rx.Observable
 
+trait Sign[V]
+trait WithSign[V, S <: Sign[V]]
+class ArraySign(val value: Array[Byte]) extends Sign[Array[Byte]]
+trait WithByteArraySing extends WithSign[Array[Byte], ArraySign]
+
+
+trait SignCreator[WS <: WithSign[S, SI], S, SI <: Sign[S]] {
+  def createSign(ws: WS): SI
+}
+
 trait Signable
 
 abstract class Signature[V] {
   def value: V
 }
 
-abstract class Signer[BC <: BlockChain, S <: Signable, V, SI <: Signature[V]] {
+abstract class Signer[BC <: BlockChain, S <: Signable with WithByteArraySing, V, SI <: Signature[V]] {
   def sign(obj: S): Signed[S, V, SI]
 }
 
@@ -22,7 +32,7 @@ abstract class AbstractValidationError[+V <: Validable](m: => String) {
   def message: String = m
 }
 
-trait Signed[+S <: Signable, V, SI <: Signature[V]] {
+trait Signed[+S <: Signable with WithByteArraySing, V, SI <: Signature[V]] {
   def signature: SI
   def signed: S
 }
@@ -36,11 +46,11 @@ abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, E <: Abst
 
 trait BlockChain {
 
-  protected abstract class BlockChainBlock extends Validable with Signable {
+  protected abstract class BlockChainBlock extends WithByteArraySing with Signable with Validable {
     type Id
   }
 
-  protected abstract class BlockChainTransaction extends Signable with Validable with StateChangeReason
+  protected abstract class BlockChainTransaction extends WithByteArraySing with Signable with Validable with StateChangeReason
 
   protected trait BlockChainSignedTransaction[TX <: T, V, SI <: Signature[V]] extends BlockChainTransaction with Signed[TX, V, SI]
     with Validable {

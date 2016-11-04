@@ -2,13 +2,13 @@ package ru.tolsi.aobp.blockchain.waves
 
 import com.google.common.primitives.{Bytes, Ints, Longs, Shorts}
 import org.whispersystems.curve25519.Curve25519
-import ru.tolsi.aobp.blockchain.base.{Signable, Signature, Signed, Signer}
+import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves.crypto.Signature64
 
 private[waves] trait WavesTransactionsSigners {
   this: WavesBlockChain =>
 
-  abstract class WavesSigner[S <: Signable, V, SI <: Signature[V]] extends Signer[WavesBlockChain, S, V, SI] {
+  abstract class WavesSigner[S <: Signable with WithByteArraySing, V, SI <: Signature[V]] extends Signer[WavesBlockChain, S, V, SI] {
     // todo move to bytes serializer
     protected def arrayWithSize(b: Array[Byte]): Array[Byte] = Shorts.toByteArray(b.length.toShort) ++ b
 
