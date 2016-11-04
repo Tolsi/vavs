@@ -28,6 +28,22 @@ private[waves] trait WavesTransactionsSigners {
     }
   }
 
+  implicit object PaymentTransactionSigner extends WavesSigner[PaymentTransaction, Array[Byte], ArraySignature64] {
+    override def sign(tx: PaymentTransaction): Signed[PaymentTransaction, Array[Byte], ArraySignature64] = ???
+  }
+
+  implicit object IssueTransactionSigner extends WavesSigner[IssueTransaction, Array[Byte], ArraySignature64] {
+    override def sign(tx: IssueTransaction): Signed[IssueTransaction, Array[Byte], ArraySignature64] = ???
+  }
+
+  implicit object ReissueTransactionSigner extends WavesSigner[ReissueTransaction, Array[Byte], ArraySignature64] {
+    override def sign(tx: ReissueTransaction): Signed[ReissueTransaction, Array[Byte], ArraySignature64] = ???
+  }
+
+  implicit object TransferTransactionSigner extends WavesSigner[TransferTransaction, Array[Byte], ArraySignature64] {
+    override def sign(tx: TransferTransaction): Signed[TransferTransaction, Array[Byte], ArraySignature64] = ???
+  }
+
   implicit object TransactionSigner extends WavesSigner[T, Array[Byte], ArraySignature64] {
     private def implicitlySign[TX <: T](tx: TX)(implicit signer:WavesSigner[TX, Array[Byte], ArraySignature64]): Signed[TX, Array[Byte], ArraySignature64] = {
       signer.sign(tx)

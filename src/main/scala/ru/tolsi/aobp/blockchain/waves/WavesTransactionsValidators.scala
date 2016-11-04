@@ -51,20 +51,20 @@ trait WavesTransactionsValidators {
     }
   }
 
-  class AnySignedTransactionValidator[STX <: ST[T]](implicit signer: Signer[WavesBlockChain, T, Array[Byte], ArraySignature64],
-                                                    txValidator: TransactionValidator[T]) extends AbstractSignedTransactionValidator[T, STX] {
-    private[waves] def signatureValidation(tx: STX, signature: Signature[Array[Byte]]): Option[WrongSignature] = {
+  implicit object AnySignedTransactionValidator extends AbstractSignedTransactionValidator[T, ST[T]] {
+    val signer = implicitly[Signer[WavesBlockChain, T, Array[Byte], ArraySignature64]]
+    private[waves] def signatureValidation(tx: ST[T], signature: Signature[Array[Byte]]): Option[WrongSignature] = {
       // todo rewrite
       if (signer.sign(tx.signed).signature.value sameElements tx.signature.value) {
         Some(new WrongSignature(s"Signature is not valid"))
       } else None
     }
 
-    override def validate(stx: STX): Either[Seq[TransactionValidationError[STX]], STX] = {
-      txValidator.validate(stx.signed) match {
+    override def validate(stx: ST[T]): Either[Seq[TransactionValidationError[ST[T]]], ST[T]] = {
+      UnsignedTransactionValidator.validate(stx.signed) match {
         case Left(errors) =>
           // todo it works? see definitions todo if not
-          Left(errors.map(_.asInstanceOf[TransactionValidationError[STX]]))
+          Left(errors.map(_.asInstanceOf[TransactionValidationError[ST[T]]]))
         case Right(_) =>
           val signatureError = signatureValidation(stx, stx.signature)
           if (signatureError.isDefined) {
@@ -76,19 +76,19 @@ trait WavesTransactionsValidators {
     }
   }
 
-  class AnySignedTransactionWithTimeValidator[STX <: ST[T]](blockTimestamp: Long)
+  class AnySignedTransactionWithTimeValidator(blockTimestamp: Long)
                                                            (implicit signer: Signer[WavesBlockChain, T, Array[Byte], ArraySignature64],
                                                                           txValidator: TransactionValidator[T],
-                                                                          signedTxValidator: AnySignedTransactionValidator[STX])
-    extends AbstractSignedTransactionWithTimeValidator[STX](blockTimestamp) {
+                                                                          signedTxValidator: AbstractSignedTransactionValidator[T, ST[T]])
+    extends AbstractSignedTransactionWithTimeValidator[ST[T]](blockTimestamp) {
 
-    private[waves] def timestampValidation(tx: STX, blockTimestamp: Long): Option[WrongTimestamp] = {
+    private[waves] def timestampValidation(tx: ST[T], blockTimestamp: Long): Option[WrongTimestamp] = {
       if (tx.timestamp - blockTimestamp < configuration.maxTimeDriftMillis) {
         Some(new WrongTimestamp(s"Signature is not valid"))
       } else None
     }
 
-    override def validate(stx: STX): Either[Seq[TransactionValidationError[STX]], STX] = {
+    override def validate(stx: ST[T]): Either[Seq[TransactionValidationError[ST[T]]], ST[T]] = {
       signedTxValidator.validate(stx) match {
         case Left(errors) =>
           Left(errors)
@@ -261,9 +261,10 @@ trait WavesTransactionsValidators {
     }
   }
 
-  override protected def txValidator(bvp: TVP): AnySignedTransactionWithTimeValidator[SignedTransaction[Transaction]] = {
-    new AnySignedTransactionWithTimeValidator[SignedTransaction[Transaction]](bvp.blockTimestamp)
-    (implicitly[Signer[WavesBlockChain, Transaction, Array[Byte], ArraySignature64]], UnsignedTransactionValidator, new SignedTransactionValidator)
+  override protected def txValidator(bvp: TVP): AnySignedTransactionWithTimeValidator = {
+    val signer = implicitly[Signer[WavesBlockChain, T, Array[Byte], ArraySignature64]]
+    new AnySignedTransactionWithTimeValidator(bvp.blockTimestamp)(signer, UnsignedTransactionValidator,
+      new SignedTransactionValidator()(signer, UnsignedTransactionValidator, new AnySignedTransactionWithTimeValidator(bvp.blockTimestamp)))
   }
 
 }

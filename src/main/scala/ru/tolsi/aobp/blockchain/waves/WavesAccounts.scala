@@ -22,7 +22,7 @@ private[waves] trait WavesAccounts {
 
     def addressFromPublicKey(publicKey: Array[Byte]): Array[Byte] = {
       val publicKeyHash = secureHash.hash(publicKey).take(HashLength)
-      val withoutChecksum = AddressVersion +: chainId +: publicKeyHash
+      val withoutChecksum = AddressVersion +: configuration.chainId +: publicKeyHash
       withoutChecksum ++ calcCheckSum(withoutChecksum)
     }
   }
@@ -57,8 +57,8 @@ private[waves] trait WavesAccounts {
       val network = addressBytes.tail.head
       if (version != AddressVersion) {
         Some(new WrongAddressVersion(s"$version != $AddressVersion"))
-      } else if (network != chainId) {
-        Some(new WrongChainId(s"$network != $chainId"))
+      } else if (network != configuration.chainId) {
+        Some(new WrongChainId(s"$network != ${configuration.chainId}"))
       } else if (addressBytes.length != AddressLength) {
         Some(new WrongAddressLength(s"${addressBytes.length} != $AddressLength"))
       } else {

@@ -19,7 +19,7 @@ private[waves] abstract class WavesBlockChain extends BlockChain
   //BlockChainSignedBlock[BL, Array[Byte], ArraySignature64]
   final type AС = Account
   final type AD = Address
-  type TXV = AnySignedTransactionWithTimeValidator[SignedTransaction[Transaction]]
+  type TXV = AbstractSignedTransactionValidator[T, ST[T]]
   type TVP = WavesTransactionValidationParameters
 
   final val secureHash = ScorexHashChain
