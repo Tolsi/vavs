@@ -169,7 +169,7 @@ abstract class StateStorage[BC <: BlockChain] {
 
   def add(b: SignedBlock): Unit
 
-  def isValid(stateChanges: Seq[BC#StateChange]): Boolean
+  def isLeadToValidState(b: SignedBlock): Boolean
 
   def switchTo(b: SignedBlock): Unit
 }

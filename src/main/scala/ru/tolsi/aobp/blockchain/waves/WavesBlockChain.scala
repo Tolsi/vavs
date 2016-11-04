@@ -14,6 +14,7 @@ private[waves] abstract class WavesBlockChain extends BlockChain
   with WavesBlocksValidators
   with WavesBlocksSigns
   with WavesBlocksSigners
+  with WavesStateChangeCalculator
   with WavesConfiguration {
   final type T = WavesTransaction
   final type ST[TX <: T] = SignedTransaction[TX]
@@ -26,7 +27,7 @@ private[waves] abstract class WavesBlockChain extends BlockChain
   type TVP = WavesTransactionValidationParameters
   type SBV = AbstractSignedBlockValidator[B, SB[B]]
   type SS = AbstractWavesStateStorage
-  type BA = (AD, WavesСurrency)
+  type BA = (Address, WavesСurrency)
 
   final val secureHash = ScorexHashChain
   final val fastHash = Blake256
