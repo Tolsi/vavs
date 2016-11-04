@@ -4,13 +4,11 @@ import rx.Observable
 
 trait Sign[V]
 trait WithSign[V, S <: Sign[V]]
-class ArraySign(val value: Array[Byte]) extends Sign[Array[Byte]]
-trait WithByteArraySing extends WithSign[Array[Byte], ArraySign]
-
-
+case class ArraySign(value: Array[Byte]) extends Sign[Array[Byte]]
 trait SignCreator[WS <: WithSign[S, SI], S, SI <: Sign[S]] {
   def createSign(ws: WS): SI
 }
+trait WithByteArraySing extends WithSign[Array[Byte], ArraySign]
 
 trait Signable
 
