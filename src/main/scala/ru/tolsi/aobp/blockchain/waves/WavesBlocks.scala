@@ -19,6 +19,8 @@ private[waves] trait WavesBlocks {
     // fasthash(lastBlockData.generationSignature ++ generator.publicKey)
     def generationSignature: Signature32
 
+    def fee: WavesMoney[Either[Waves.type, Asset]]
+
     def transactions: Seq[Signed[WavesTransaction, Signature64]]
 
     def generator: Account
@@ -40,6 +42,8 @@ private[waves] trait WavesBlocks {
     override def generationSignature: Signature32 = block.generationSignature
 
     override def signed: BL = block
+
+    override def fee: WavesMoney[Either[Waves.type, Asset]] = block.fee
   }
 
   case class GenesisBlock(timestamp: Long,
@@ -47,6 +51,7 @@ private[waves] trait WavesBlocks {
                           baseTarget: Long,
                           generator: Account,
                           generationSignature: Signature32,
+                          fee: WavesMoney[Either[Waves.type, Asset]],
                           transactions: Seq[Signed[WavesTransaction, Signature64]]
                          ) extends WavesBlock {
     val version: Byte = 2
@@ -58,6 +63,7 @@ private[waves] trait WavesBlocks {
                        baseTarget: Long,
                        generator: Account,
                        generationSignature: Signature32,
+                       fee: WavesMoney[Either[Waves.type, Asset]],
                        transactions: Seq[Signed[WavesTransaction, Signature64]]) extends WavesBlock {
     val version: Byte = 3
   }

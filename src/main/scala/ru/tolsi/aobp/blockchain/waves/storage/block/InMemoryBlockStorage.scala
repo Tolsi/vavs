@@ -2,10 +2,13 @@ package ru.tolsi.aobp.blockchain.waves.storage.block
 
 import ru.tolsi.aobp.blockchain.base.BlockStorage
 import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves.storage.NotThreadSafeStorage
 
 import scala.collection.mutable
 
-class InMemoryBlockStorage extends BlockStorage[WavesBlockChain] {
+abstract class WavesBlockStorage extends BlockStorage[WavesBlockChain]
+
+class InMemoryBlockStorage extends WavesBlockStorage with NotThreadSafeStorage {
   private val map = new mutable.AnyRefMap[BlockId, SignedBlock]()
 
   override def put(block: SignedBlock): Unit = map += (block.signature -> block)

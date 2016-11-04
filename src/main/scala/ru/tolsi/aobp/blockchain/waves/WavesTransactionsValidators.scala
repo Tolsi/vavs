@@ -265,6 +265,7 @@ trait WavesTransactionsValidators {
 
   override protected def txValidator(bvp: TVP): SignedTransactionWithTimeValidator = {
     val signer = implicitly[Signer[WavesBlockChain, T, Signature64]]
+    // todo check payment like in original waves
     new SignedTransactionWithTimeValidator(bvp.blockTimestamp)(signer, UnsignedTransactionValidator,
       new SignedTransactionValidator()(signer, UnsignedTransactionValidator, new SignedTransactionWithTimeValidator(bvp.blockTimestamp)))
   }

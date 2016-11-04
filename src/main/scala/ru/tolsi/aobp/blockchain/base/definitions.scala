@@ -62,17 +62,16 @@ abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, E <: Abst
 }
 
 trait BlockChain {
-
-  protected abstract class BlockChainBlock extends WithByteArraySing with Signable with Validable with BytesSerializable {
-    type Id
-  }
-
   protected abstract class BlockChainTransaction extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable
 
   protected trait BlockChainSignedTransaction[TX <: T, SI <: Signature[Array[Byte]]] extends BlockChainTransaction with Signed[TX, SI] {
 
     protected trait ValidationError extends AbstractValidationError[this.type]
 
+  }
+
+  protected abstract class BlockChainBlock extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable {
+    type Id
   }
 
   protected trait BlockChainSignedBlock[BL <: B, SI <: Signature[Array[Byte]]] extends BlockChainBlock with Signed[BL, SI] {
@@ -92,6 +91,9 @@ trait BlockChain {
   type TXV <: AbstractSignedTransactionValidator[T, ST[T]]
   type TVP <: BlockTransactionParameters
   type SBV <: AbstractSignedBlockValidator[B, SB[B]]
+  type BA
+
+  case class StateChange(account: BA, amount: Long)
 
   protected abstract class BlockChainAccount(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
 
@@ -158,17 +160,18 @@ abstract class UnconfirmedTransactionStorage[BC <: BlockChain] {
 }
 
 abstract class StateStorage[BC <: BlockChain] {
-  type BalanceAccount
   type BalanceValue = Long
-  final type Block = BC#B
+  final type SignedBlock = BC#SB[BC#B]
 
-  def currentState: Map[BalanceAccount, BalanceValue]
+  def currentState: Map[BC#BA, BalanceValue]
 
-  def currentBalance(balanceAccount: BalanceAccount): BalanceValue
+  def currentBalance(balanceAccount: BC#BA): Option[BalanceValue]
 
-  def add(b: Block): Unit
+  def add(b: SignedBlock): Unit
 
-  def switchTo(b: Block): Unit
+  def isValid(stateChanges: Seq[BC#StateChange]): Boolean
+
+  def switchTo(b: SignedBlock): Unit
 }
 
 sealed trait ProtocolRequest

@@ -1,19 +1,19 @@
 package ru.tolsi.aobp.blockchain.waves.storage.state
 
 import ru.tolsi.aobp.blockchain.base.StateStorage
+import ru.tolsi.aobp.blockchain.waves.storage.block.WavesBlockStorage
 import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesСurrency}
 
-private[waves] abstract class AbstractWavesStateStorage extends StateStorage[WavesBlockChain] {
-  override type BalanceAccount = (String, WavesСurrency)
+private[waves] abstract class AbstractWavesStateStorage(blocksStorage: WavesBlockStorage) extends StateStorage[WavesBlockChain] {
   override type BalanceValue = Long
 
-  def currentState: Map[BalanceAccount, BalanceValue]
+  def currentState: Map[WavesBlockChain#BA, BalanceValue]
 
-  def currentBalance(balanceAccount: BalanceAccount): BalanceValue
-  def currentBalance(balanceAccount: String): Map[WavesСurrency, BalanceValue]
-  def currentBalance(balanceAccount: String, currency: WavesСurrency): BalanceValue
+  def currentBalance(balanceAccount: WavesBlockChain#BA): Option[BalanceValue]
+  def currentBalance(balanceAccount: WavesBlockChain#Address): Map[WavesСurrency, BalanceValue]
+  def currentBalance(balanceAccount: WavesBlockChain#Address, currency: WavesСurrency): Option[BalanceValue]
 
-  def add(b: Block): Unit
+  def add(b: SignedBlock): Unit
 
-  def switchTo(b: Block): Unit
+  def switchTo(b: SignedBlock): Unit
 }

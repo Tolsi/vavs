@@ -2,6 +2,7 @@ package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
+import ru.tolsi.aobp.blockchain.waves.storage.state.AbstractWavesStateStorage
 import scorex.crypto.hash.Blake256
 
 private[waves] abstract class WavesBlockChain extends BlockChain
@@ -24,11 +25,13 @@ private[waves] abstract class WavesBlockChain extends BlockChain
   type TXV = AbstractSignedTransactionValidator[T, ST[T]]
   type TVP = WavesTransactionValidationParameters
   type SBV = AbstractSignedBlockValidator[B, SB[B]]
+  type SS = AbstractWavesStateStorage
+  type BA = (AD, WavesСurrency)
 
   final val secureHash = ScorexHashChain
   final val fastHash = Blake256
 
-  def state: StateStorage[WavesBlockChain]
+  def state: AbstractWavesStateStorage
 
   def blocksStorage: BlockStorage[this.type]
 }

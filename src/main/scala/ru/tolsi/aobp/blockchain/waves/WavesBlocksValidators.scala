@@ -42,6 +42,8 @@ trait WavesBlocksValidators {
     override def validate(b: WavesBlock): Either[Seq[BlockValidationError[WavesBlock]], WavesBlock] = {
       b match {
           // todo validate transactions
+          // todo txs in correct order
+          // todo not from future and from last block time, see original waves
         case b: GenesisBlock => implicitlyValidate(b)
         case b: BaseBlock => implicitlyValidate(b)
       }
