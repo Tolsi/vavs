@@ -1,7 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.crypto
 
-import scorex.crypto.encode.Base58
 import ru.tolsi.aobp.blockchain.base.{Signature32 => BaseSignature32}
+import scorex.crypto.encode.Base58
 
 private[waves] class Signature32(val bytes: Array[Byte]) extends BaseSignature32(bytes) {
 
