@@ -137,11 +137,16 @@ trait BlockChainApp[BC <: BlockChain] {
 
 // todo хранить блокчейн как дерево и удалять неосновные ветки после N
 abstract class BlockStorage[BC <: BlockChain] {
-  def put(block: BC#B): Unit
+  final type SignedBlock = BC#SB[BC#B]
+  final type BlockId = BC#B#Id
 
-  def get(id: BC#B#Id): Option[BC#B]
+  def put(block: SignedBlock): Unit
 
-  def contains(id: BC#B#Id): Boolean
+  def get(id: BlockId): Option[SignedBlock]
+
+  def contains(id: BlockId): Boolean
+
+  def remove(id: BlockId): Option[SignedBlock]
 }
 
 abstract class UnconfirmedTransactionStorage[BC <: BlockChain] {
@@ -154,15 +159,16 @@ abstract class UnconfirmedTransactionStorage[BC <: BlockChain] {
 
 abstract class StateStorage[BC <: BlockChain] {
   type BalanceAccount
-  type Balance = Long
+  type BalanceValue = Long
+  final type Block = BC#B
 
-  def currentState: Map[BalanceAccount, Balance]
+  def currentState: Map[BalanceAccount, BalanceValue]
 
-  def currentBalance(balanceAccount: BalanceAccount): Balance
+  def currentBalance(balanceAccount: BalanceAccount): BalanceValue
 
-  def apply(b: BC#B): Unit
+  def add(b: Block): Unit
 
-  def rollback(b: BC#B): Unit
+  def switchTo(b: Block): Unit
 }
 
 sealed trait ProtocolRequest

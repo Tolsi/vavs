@@ -28,7 +28,7 @@ private[waves] abstract class WavesBlockChain extends BlockChain
   final val secureHash = ScorexHashChain
   final val fastHash = Blake256
 
-  def state: StateStorage[this.type]
+  def state: StateStorage[WavesBlockChain]
 
   def blocksStorage: BlockStorage[this.type]
 }
