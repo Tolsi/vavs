@@ -45,8 +45,8 @@ private[waves] trait WavesBlocks {
   case class GenesisBlock(timestamp: Long,
                           reference: Signature64,
                           baseTarget: Long,
-                          generationSignature: Signature32,
                           generator: Account,
+                          generationSignature: Signature32,
                           transactions: Seq[Signed[WavesTransaction, Signature64]]
                          ) extends WavesBlock {
     val version: Byte = 2
@@ -55,11 +55,10 @@ private[waves] trait WavesBlocks {
 
   case class BaseBlock(timestamp: Long,
                        reference: Signature64,
-                       transactions: Seq[Signed[WavesTransaction, Signature64]],
                        baseTarget: Long,
+                       generator: Account,
                        generationSignature: Signature32,
-
-                       generator: Account) extends WavesBlock {
+                       transactions: Seq[Signed[WavesTransaction, Signature64]]) extends WavesBlock {
     val version: Byte = 3
   }
 
