@@ -8,7 +8,7 @@ trait WavesStateChangeCalculator {
   class WavesStateChangeCalculator  {
     def calculateStateChanges(b: B): Seq[StateChange] = {
       val blockFee = b.transactions.map(t => (t.signed.feeCurrency, t.signed.fee))
-      val feeBalanceChanges = blockFee.groupBy(_._1).mapValues(_.map(_._2).sum).map {
+      val feeBalanceChangesByCurrency = blockFee.groupBy(_._1).mapValues(_.map(_._2).sum).map {
         case (currency, value) => StateChange((b.generator.address, currency), value)
       }
       val balanceUpdates = b.transactions.map(_.signed).flatMap {
@@ -30,7 +30,9 @@ trait WavesStateChangeCalculator {
           StateChange((t.recipient, t.transfer.currency.fold(identity, identity)), t.quantity)
         )
       }
-      balanceUpdates ++ feeBalanceChanges
+      val groupedByAccountAndCurrency = (balanceUpdates ++ feeBalanceChangesByCurrency).groupBy(_.account)
+        .map(bcs => StateChange(bcs._1, bcs._2.map(_.amount).sum)).toSeq
+      groupedByAccountAndCurrency
     }
   }
 
