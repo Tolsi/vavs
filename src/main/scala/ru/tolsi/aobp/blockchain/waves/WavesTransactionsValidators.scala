@@ -108,7 +108,7 @@ trait WavesTransactionsValidators {
     override def validate(tx: GenesisTransaction): Either[Seq[TransactionValidationError[GenesisTransaction]], GenesisTransaction] = {
       val errors = Seq(
         addressValidation(tx.recipient),
-        negativeAmountValidation(tx.amount)
+        negativeAmountValidation(tx.quantity)
       ).flatten
       if (errors.nonEmpty) Left(errors) else Right(tx)
     }
@@ -118,9 +118,9 @@ trait WavesTransactionsValidators {
     override def validate(tx: PaymentTransaction): Either[Seq[TransactionValidationError[PaymentTransaction]], PaymentTransaction] = {
       val errors = Seq(
         addressValidation(tx.recipient),
-        negativeAmountValidation(tx.amount),
+        negativeAmountValidation(tx.quantity),
         negativeFeeValidation(tx.fee),
-        overflowValidation(tx.amount, tx.fee)
+        overflowValidation(tx.quantity, tx.fee)
       ).flatten
       if (errors.nonEmpty) Left(errors) else Right(tx)
     }
@@ -178,7 +178,7 @@ trait WavesTransactionsValidators {
         maxDescriptorNameLength(tx.description),
         negativeDecimals(tx.decimals),
         maxDecimals(tx.decimals),
-        negativeAmountValidation(tx.amount),
+        negativeAmountValidation(tx.quantity),
         overflowValidation(tx.issue, tx.feeMoney)
       ).flatten
       if (errors.nonEmpty) Left(errors) else Right(tx)
@@ -189,7 +189,7 @@ trait WavesTransactionsValidators {
     override def validate(tx: ReissueTransaction): Either[Seq[TransactionValidationError[ReissueTransaction]], ReissueTransaction] = {
       val errors = Seq(
         addressValidation(tx.recipient),
-        negativeAmountValidation(tx.amount),
+        negativeAmountValidation(tx.quantity),
         negativeFeeValidation(tx.fee),
         overflowValidation(tx.issue, tx.feeMoney)
       ).flatten
@@ -222,7 +222,7 @@ trait WavesTransactionsValidators {
       val errors = Seq(
         addressValidation(tx.recipient),
         attachmentSizeValidation(tx.attachment),
-        negativeAmountValidation(tx.amount),
+        negativeAmountValidation(tx.quantity),
         negativeFeeValidation(tx.fee),
         overflowValidation(tx.transfer, tx.feeMoney)
       ).flatten

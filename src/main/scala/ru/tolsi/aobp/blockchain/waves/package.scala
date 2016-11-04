@@ -14,9 +14,9 @@ package object waves {
 
   case object Waves extends WavesСurrency
 
-  case class Asset(id: Array[Byte]) extends WavesСurrency {
+  case class Asset(id: Array[Byte], decimals: Long) extends WavesСurrency {
     override def equals(obj: scala.Any): Boolean = obj match {
-      case Asset(otherId) => id sameElements otherId
+      case Asset(otherId, _) => id sameElements otherId
     }
 
     override def hashCode(): Int = {
@@ -24,6 +24,11 @@ package object waves {
     }
   }
 
-  case class WavesMoney[C <: Either[Waves.type, Asset]](value: Long, currency: C)
+  case class WavesMoney[C <: Either[Waves.type, Asset]](value: Long, currency: C) {
+    def amount: BigDecimal = {
+      val valueBigDecimal = BigDecimal(value)
+      currency.fold(_ => valueBigDecimal, a => valueBigDecimal / (10 ^ a.decimals))
+    }
+  }
 
 }

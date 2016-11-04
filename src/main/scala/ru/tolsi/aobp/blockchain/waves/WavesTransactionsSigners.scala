@@ -24,7 +24,7 @@ private[waves] trait WavesTransactionsSigners {
     override def sign(tx: GenesisTransaction): Signed[GenesisTransaction, Signature64] = {
       val typeBytes = Bytes.ensureCapacity(Ints.toByteArray(TransactionType.GenesisTransaction.id), TypeLength, 0)
       val timestampBytes = Bytes.ensureCapacity(Longs.toByteArray(tx.timestamp), TimestampLength, 0)
-      val amountBytes = Bytes.ensureCapacity(Longs.toByteArray(tx.amount), AmountLength, 0)
+      val amountBytes = Bytes.ensureCapacity(Longs.toByteArray(tx.quantity), AmountLength, 0)
       val sign = Bytes.concat(typeBytes, timestampBytes, tx.recipient.address, amountBytes)
 
       val h = fastHash(sign)
@@ -44,7 +44,7 @@ private[waves] trait WavesTransactionsSigners {
       import tx._
       val typeBytes = Ints.toByteArray(TransactionType.PaymentTransaction.id)
       val timestampBytes = Longs.toByteArray(timestamp)
-      val amountBytes = Longs.toByteArray(amount)
+      val amountBytes = Longs.toByteArray(quantity)
       val feeBytes = Longs.toByteArray(fee)
       ArraySign(Bytes.concat(typeBytes, timestampBytes, sender.publicKey, recipient.address, amountBytes, feeBytes))
     }
@@ -62,7 +62,7 @@ private[waves] trait WavesTransactionsSigners {
       import tx._
       ArraySign(Bytes.concat(Array(TransactionType.IssueTransaction.id.toByte), sender.publicKey,
         arrayWithSize(name), arrayWithSize(description),
-        Longs.toByteArray(amount), Array(decimals), Array(booleanWithByte(reissuable)),
+        Longs.toByteArray(quantity), Array(decimals), Array(booleanWithByte(reissuable)),
         Longs.toByteArray(fee), Longs.toByteArray(timestamp)))
     }
   }
@@ -78,7 +78,7 @@ private[waves] trait WavesTransactionsSigners {
     override def createSign(tx: ReissueTransaction): ArraySign = {
       import tx._
       ArraySign(Bytes.concat(Array(TransactionType.ReissueTransaction.id.toByte), sender.publicKey, tx.issue.currency.b.id,
-        Longs.toByteArray(amount),
+        Longs.toByteArray(quantity),
         Array(booleanWithByte(reissuable)), Longs.toByteArray(fee), Longs.toByteArray(timestamp)))
     }
   }
@@ -96,7 +96,7 @@ private[waves] trait WavesTransactionsSigners {
       val timestampBytes = Longs.toByteArray(timestamp)
       // todo as serializer
       val assetIdBytes = writeArrayOption(transfer.currency.fold(_ => None, a => Some(a.id)))
-      val amountBytes = Longs.toByteArray(amount)
+      val amountBytes = Longs.toByteArray(quantity)
       val feeAssetBytes = writeArrayOption(feeMoney.currency.fold(_ => None, a => Some(a.id)))
       val feeBytes = Longs.toByteArray(fee)
 

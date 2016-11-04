@@ -6,7 +6,7 @@ private[waves] trait WavesBlocks {
   this: WavesBlockChain =>
 
   abstract sealed class WavesBlock extends BlockChainBlock {
-    override type Id = Signature32
+    override type Id = Signature64
 
     def version: Byte
 

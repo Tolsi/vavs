@@ -20,7 +20,9 @@ private[waves] trait WavesTransactions {
 
     def timestamp: Long
 
-    def amount: Long
+    def amount: BigDecimal
+
+    def quantity: Long
 
     def currency: WavesСurrency
 
@@ -41,7 +43,9 @@ private[waves] trait WavesTransactions {
 
     override def timestamp: Long = tx.timestamp
 
-    override def amount: Long = tx.amount
+    override def amount: BigDecimal = tx.amount
+
+    override def quantity: Long = tx.quantity
 
     override def currency: WavesСurrency = tx.currency
 
@@ -50,7 +54,7 @@ private[waves] trait WavesTransactions {
     override def feeCurrency: WavesСurrency = tx.feeCurrency
   }
 
-  case class GenesisTransaction(recipient: Address, timestamp: Long, amount: Long) extends WavesTransaction {
+  case class GenesisTransaction(recipient: Address, timestamp: Long, quantity: Long) extends WavesTransaction {
     override val typeId = TransactionType.GenesisTransaction
 
     override val fee: Long = 0
@@ -58,11 +62,13 @@ private[waves] trait WavesTransactions {
     override val currency: WavesСurrency = Waves
 
     override val feeCurrency: WavesСurrency = Waves
+
+    override def amount: BigDecimal = BigDecimal(quantity)
   }
 
   case class PaymentTransaction(sender: Account,
                                 override val recipient: Address,
-                                override val amount: Long,
+                                override val quantity: Long,
                                 override val fee: Long,
                                 override val timestamp: Long) extends WavesTransaction {
     override def typeId = TransactionType.PaymentTransaction
@@ -70,6 +76,8 @@ private[waves] trait WavesTransactions {
     override def currency: WavesСurrency = Waves
 
     override def feeCurrency: WavesСurrency = Waves
+
+    override def amount: BigDecimal = BigDecimal(quantity)
   }
 
   sealed trait AssetIssuanceTransaction extends WavesTransaction {
@@ -90,13 +98,15 @@ private[waves] trait WavesTransactions {
 
     override val recipient: Address = sender.address
 
-    override def amount: Long = issue.value
+    override def amount: BigDecimal = issue.amount
 
     override def currency: WavesСurrency = issue.currency.b
 
     override def feeCurrency: WavesСurrency = feeMoney.currency.a
 
     override def fee: Long = feeMoney.value
+
+    override def quantity: Long = issue.value
   }
 
   case class ReissueTransaction(sender: Account,
@@ -108,13 +118,15 @@ private[waves] trait WavesTransactions {
 
     override val recipient: Address = sender.address
 
-    override def amount: Long = issue.value
+    override def amount: BigDecimal = issue.amount
 
     override def currency: WavesСurrency = issue.currency.b
 
     override def feeCurrency: WavesСurrency = feeMoney.currency.a
 
     override def fee: Long = feeMoney.value
+
+    override def quantity: Long = issue.value
   }
 
   case class TransferTransaction(timestamp: Long,
@@ -125,13 +137,15 @@ private[waves] trait WavesTransactions {
                                  attachment: Array[Byte]) extends WavesTransaction {
     override def typeId = TransactionType.TransferTransaction
 
-    override def amount: Long = transfer.value
+    override def amount: BigDecimal = transfer.amount
 
     override def currency: WavesСurrency = transfer.currency.fold(identity, identity)
 
     override def feeCurrency: WavesСurrency = feeMoney.currency.fold(identity, identity)
 
     override def fee: Long = feeMoney.value
+
+    override def quantity: Long = transfer.value
   }
 
 }
