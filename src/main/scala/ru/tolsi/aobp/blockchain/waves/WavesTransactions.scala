@@ -30,7 +30,7 @@ private[waves] trait WavesTransactions {
     //  def balanceChanges(): Seq[(WavesAccount, Long)]
   }
 
-  abstract class SignedTransaction[TX <: T](tx: TX) extends Transaction with BlockChainSignedTransaction[TX, Array[Byte], ArraySignature64] {
+  case class SignedTransaction[TX <: T](tx: TX, signature: ArraySignature64) extends Transaction with BlockChainSignedTransaction[TX, Array[Byte], ArraySignature64] {
     override def signed: TX = tx
 
     override def typeId: TransactionType.Value = tx.typeId
