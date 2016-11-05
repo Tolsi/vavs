@@ -138,10 +138,9 @@ trait BlockChainApp[BC <: BlockChain] {
 }
 
 // todo хранить блокчейн как дерево и удалять неосновные ветки после N
-abstract class BlockStorage[BC <: BlockChain] {
-  final type SignedBlock = BC#SB[BC#B]
-  final type BlockId = BC#B#Id
-
+abstract class BlockStorage[BC <: BlockChain, BSB <: BC#SB[BC#B], BId <: BC#B#Id] {
+  type BlockId = BId
+  type SignedBlock = BSB
   def put(block: SignedBlock): Unit
 
   def get(id: BlockId): Option[SignedBlock]
@@ -159,13 +158,12 @@ abstract class UnconfirmedTransactionStorage[BC <: BlockChain] {
   def remove(tx: BC#T): Option[BC#T]
 }
 
-abstract class StateStorage[BC <: BlockChain] {
+abstract class StateStorage[BC <: BlockChain, SignedBlock <: BC#SB[BC#B], BBA <: BC#BA] {
   type BalanceValue = Long
-  final type SignedBlock = BC#SB[BC#B]
 
-  def currentState: Map[BC#BA, BalanceValue]
+  def currentState: Map[BBA, BalanceValue]
 
-  def currentBalance(balanceAccount: BC#BA): Option[BalanceValue]
+  def currentBalance(balanceAccount: BBA): Option[BalanceValue]
 
   def add(b: SignedBlock): Unit
 

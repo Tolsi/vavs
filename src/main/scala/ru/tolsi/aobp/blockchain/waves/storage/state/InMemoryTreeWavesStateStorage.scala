@@ -1,50 +1,51 @@
 package ru.tolsi.aobp.blockchain.waves.storage.state
-import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesStateChangeCalculator, WavesСurrency}
+
 import ru.tolsi.aobp.blockchain.waves.storage.NotThreadSafeStorage
 import ru.tolsi.aobp.blockchain.waves.storage.block.WavesBlockStorage
+import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesStateChangeCalculator, WavesСurrency}
 
 import scala.collection.mutable
 import scala.util.Try
 
-trait InMemoryState extends WavesBlockChain {
-  trait InMemoryState extends NotThreadSafeStorage {
-    self: AbstractWavesStateStorage =>
-    protected val state = new mutable.AnyRefMap[BA, BalanceValue]
-    def currentState: Map[BA, BalanceValue] = state.toMap
+trait InMemoryState[W <: WavesBlockChain] extends NotThreadSafeStorage {
+  self: AbstractWavesStateStorage[W] =>
+  protected val state = new mutable.AnyRefMap[W#BA, BalanceValue]
 
-    def currentBalance(balanceAccount: BA): Option[BalanceValue] = state.get(balanceAccount)
+  def currentState: Map[W#BA, BalanceValue] = state.toMap
 
-    def currentBalance(balanceAccount: Address): Map[WavesСurrency, BalanceValue] = currentState.filter(_._1._1 == balanceAccount).map(kv => kv._1._2 -> kv._2)
+  def currentBalance(balanceAccount: W#BA): Option[BalanceValue] = state.get(balanceAccount)
 
-    def currentBalance(balanceAccount: Address, currency: WavesСurrency): Option[BalanceValue] = state.get((balanceAccount, currency))
+  def currentBalance(balanceAccount: W#AD): Map[WavesСurrency, BalanceValue] = currentState.filter(_._1._1 == balanceAccount).map(kv => kv._1._2 -> kv._2)
 
+  def currentBalance(balanceAccount: W#AD, currency: WavesСurrency): Option[BalanceValue] = state.get((balanceAccount, currency))
+
+}
+
+class InMemoryTreeWavesStateStorage[W <: WavesBlockChain](blocksStorage: WavesBlockStorage[W]) extends AbstractWavesStateStorage[W](blocksStorage) with InMemoryState[W] with NotThreadSafeStorage {
+  override def add(b: W#SB[W#B]): Unit = {
+    tryToApplyBlock(b, state).foreach(_ => blocksStorage.put(b))
   }
 
-  class InMemoryTreeWavesStateStorage(blocksStorage: WavesBlockStorage) extends AbstractWavesStateStorage(blocksStorage) with InMemoryState with NotThreadSafeStorage {
-    override def add(b: SignedBlock): Unit = {
-      tryToApplyBlock(b, state).foreach(_ => blocksStorage.put(b))
-    }
+  override def switchTo(b: W#SB[W#B]): Unit = {
+    // todo try to rollback to new state
+    ???
+  }
 
-    override def switchTo(b: SignedBlock): Unit = {
-      // todo try to rollback to new state
-      ???
-    }
+  private val stateCalculator = new WavesStateChangeCalculator[W]
 
-    private def tryToApplyBlock(b: B, updatedState: mutable.AnyRefMap[BA, BalanceValue]): Try[Map[BA, BalanceValue]] = Try {
-      WavesStateChangeCalculator.calculateStateChanges(b).foreach { bc =>
-        val oldBalance = updatedState.getOrElseUpdate(bc.account, state.getOrElse(bc.account, 0L))
-        val newBalance = Math.addExact(oldBalance, bc.amount)
-        if (newBalance < 0) {
-          throw new IllegalStateException("Negative balance")
-        }
-        updatedState.update(bc.account, newBalance)
+  private def tryToApplyBlock(b: W#B, updatedState: mutable.AnyRefMap[W#BA, BalanceValue]): Try[Map[W#BA, BalanceValue]] = Try {
+    stateCalculator.calculateStateChanges(b).foreach { bc =>
+      val oldBalance = updatedState.getOrElseUpdate(bc.account, state.getOrElse(bc.account, 0L))
+      val newBalance = Math.addExact(oldBalance, bc.amount)
+      if (newBalance < 0) {
+        throw new IllegalStateException("Negative balance")
       }
-      updatedState.toMap
+      updatedState.update(bc.account, newBalance)
     }
-
-    override def isLeadToValidState(b: SignedBlock): Boolean = {
-      tryToApplyBlock(b, new mutable.AnyRefMap[BA, BalanceValue]()).isSuccess
-    }
+    updatedState.toMap
   }
 
+  override def isLeadToValidState(b: W#SB[W#B]): Boolean = {
+    tryToApplyBlock(b, new mutable.AnyRefMap[W#BA, BalanceValue]()).isSuccess
+  }
 }
