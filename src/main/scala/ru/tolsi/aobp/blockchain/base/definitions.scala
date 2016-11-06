@@ -19,8 +19,8 @@ abstract class Signature[V] {
   def value: V
 }
 
-abstract class Signer[BC <: BlockChain, S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]] {
-  def sign(obj: S)(implicit bc: BC): Signed[S, SI]
+abstract class Signer[BC <: BlockChain, S <: Signable with WithByteArraySing, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] {
+  def sign(obj: S)(implicit bc: BC): SV
 }
 
 abstract class ArrayByteSignature extends Signature[Array[Byte]] {
@@ -59,7 +59,10 @@ trait StateChangeReason
 
 // todo VE, E <: AbstractValidationError[VE] ?
 abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, VO >: V <: Validable, E <: AbstractValidationError[VO]] {
-  def validate(tx: V)(implicit bc: BC): Either[Seq[E], VO]
+  type ResultT = Either[ErrorsSeqT, ValidatedT]
+  type ErrorsSeqT = Seq[E]
+  type ValidatedT = VO
+  def validate(tx: V)(implicit bc: BC): ResultT
 }
 
 abstract class BlockChainTransaction[+BC <: BlockChain] extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable
@@ -100,22 +103,18 @@ abstract class AbstractSignedBlockValidator[BC <: BlockChain, BL <: BC#B, SBL <:
 trait BlockTransactionParameters[BC <: BlockChain]
 
 trait BlockChain {
-  type T <: BlockChainTransaction[this.type]
+  type T <: BlockChainTransaction[_ <: BlockChain]
   type ST[TX <: T] <: Signed[TX, Signature64] with T
-  type B <: BlockChainBlock[this.type]
+  type B <: BlockChainBlock[_ <: BlockChain]
   type SB[BL <: B] <: Signed[BL, Signature64] with B
-  type AC <: BlockChainAccount[this.type]
-  type AD <: BlockChainAddress[this.type]
-  type TXV <: AbstractSignedTransactionValidator[this.type, T, ST[T]]
-  type TVP <: BlockTransactionParameters[this.type]
-  type SBV <: AbstractSignedBlockValidator[this.type, B, SB[B]]
+  type AC <: BlockChainAccount[_ <: BlockChain]
+  type AD <: BlockChainAddress[_ <: BlockChain]
+  type TXV <: AbstractSignedTransactionValidator[_ <: BlockChain, T, ST[T]]
+  type TVP <: BlockTransactionParameters[_ <: BlockChain]
+  type SBV <: AbstractSignedBlockValidator[_ <: BlockChain, B, SB[B]]
   type BA
 
   def genesis: B
-
-  def txValidator(bvp: TVP): TXV
-
-  def blockValidator: SBV
 }
 
 
@@ -167,9 +166,13 @@ abstract class StateStorage[BC <: BlockChain, SignedBlock <: BC#SB[BC#B], BBA <:
 
   def add(b: SignedBlock): Unit
 
-  def isLeadToValidState(b: SignedBlock): Boolean
-
   def switchTo(b: SignedBlock): Unit
+}
+
+trait StateValidator[BC <: BlockChain, Block <: BC#B, Transaction <: BC#T] {
+  def isLeadToValidState(b: Block): Boolean
+  def isLeadToValidState(t: Transaction): Boolean
+  def isLeadToValidState(t: Seq[Transaction]): Boolean
 }
 
 sealed trait ProtocolRequest

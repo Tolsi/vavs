@@ -20,7 +20,7 @@ abstract class WavesBlock extends BlockChainBlock[WavesBlockChain] {
 
   def fee: WavesMoney[Either[Waves.type, Asset]]
 
-  def transactions: Seq[Signed[WavesBlockChain#T, Signature64]]
+  def transactions: Seq[WavesBlockChain#ST[WavesBlockChain#T]]
 
   def generator: WavesBlockChain#AC
 }

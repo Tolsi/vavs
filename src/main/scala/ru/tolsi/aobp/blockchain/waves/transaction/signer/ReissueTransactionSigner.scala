@@ -6,9 +6,9 @@ import ru.tolsi.aobp.blockchain.base.{ArraySign, ArraySignCreator, Signature64, 
 import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
 import ru.tolsi.aobp.blockchain.waves.transaction.{ReissueTransaction, SignedTransaction, TransactionType}
 
-private[signer] class ReissueTransactionSigner extends WavesSigner[ReissueTransaction, Signature64]
+private[signer] class ReissueTransactionSigner extends WavesSigner[ReissueTransaction, SignedTransaction[ReissueTransaction], Signature64]
   with ArraySignCreator[ReissueTransaction] {
-  override def sign(tx: ReissueTransaction)(implicit bc: WavesBlockChain): Signed[ReissueTransaction, Signature64] = {
+  override def sign(tx: ReissueTransaction)(implicit bc: WavesBlockChain): SignedTransaction[ReissueTransaction] = {
     val signature = new Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
       createSign(tx).value))
     SignedTransaction(tx, signature)
