@@ -1,6 +1,6 @@
 package ru.tolsi.aobp.blockchain
 
-import ru.tolsi.aobp.blockchain.base.LyHash
+import ru.tolsi.aobp.blockchain.base.{LyHash, Signature64, Signed}
 
 import scala.util.Either
 
@@ -30,5 +30,4 @@ package object waves {
       currency.fold(_ => valueBigDecimal, a => valueBigDecimal / (10 ^ a.decimals))
     }
   }
-
 }

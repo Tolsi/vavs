@@ -25,11 +25,15 @@ private[waves] abstract class WavesBlockChain extends BlockChain {
   final val secureHash = ScorexHashChain
   final val fastHash = Blake256
 
-  def stateStorage: SS
+  def stateStorage: SS = ???
 
   def configuration: WavesConfiguration
+
+  def genesis: WavesBlock
 
   override def txValidator(bvp: TVP): SignedTransactionWithTimeValidator = signedTransactionWithTimeValidator(bvp.blockTimestamp)
 
   override val blockValidator: AbstractSignedBlockValidator[WavesBlockChain, WavesBlock, SB[WavesBlock]] = signedBlockValidator
 }
+
+class TestNetWavesBlockChain extends WavesBlockChain with TestNetWavesBlockChainConfiguration

@@ -1,6 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base.{Signature32, Signature64}
+import ru.tolsi.aobp.blockchain.waves.block.GenesisBlock
+import ru.tolsi.aobp.blockchain.waves.transaction.GenesisTransaction
 
 import scala.concurrent.duration._
 
@@ -52,7 +54,23 @@ abstract class WavesConfiguration {
 
 trait TestNetWavesBlockChainConfiguration {
   self: WavesBlockChain =>
+  implicit val bc = self
   override val configuration: WavesConfiguration = new WavesConfiguration.Default("T".toByte)(this)
+  val genesisTimestamp = 1460952000000L
+  val genesisTransactions = {
+    val singleNodeBalance = (configuration.initialBalance * 0.02).toLong
+    val transactions = Seq(
+      GenesisTransaction(Address("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8"), genesisTimestamp, 2 * singleNodeBalance).signed,
+      GenesisTransaction(Address("3NBVqYXrapgJP9atQccdBPAgJPwHDKkh6A8"), genesisTimestamp, singleNodeBalance).signed,
+      GenesisTransaction(Address("3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh"), genesisTimestamp, singleNodeBalance).signed,
+      GenesisTransaction(Address("3NCBMxgdghg4tUhEEffSXy11L6hUi6fcBpd"), genesisTimestamp, singleNodeBalance).signed,
+      GenesisTransaction(Address("3N18z4B8kyyQ96PhN5eyhCAbg4j49CgwZJx"), genesisTimestamp, configuration.initialBalance - 5 * singleNodeBalance).signed
+    )
+    require(transactions.foldLeft(0L)(_ + _.signed.quantity) == configuration.initialBalance)
+    transactions
+  }
+  override val genesis: B = GenesisBlock(genesisTimestamp, new Signature64(Array.fill[Byte](64)(0)), configuration.initialBaseTarget, configuration.genesisGeneratorAccount, configuration.genesisGenerationSignature, WavesMoney[Either[Waves.type, Asset]](0, Left(Waves)), genesisTransactions)
+
 }
 
 trait MainNetWavesBlockChainConfiguration {

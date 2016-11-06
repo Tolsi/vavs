@@ -2,6 +2,7 @@ package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base.{AbstractValidationError, BlockChainAccount, BlockChainAddress}
 import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
+import scorex.crypto.encode.Base58
 import scorex.crypto.signatures.Curve25519
 
 object Account {
@@ -68,6 +69,8 @@ object Address {
       }
     }
   }
+
+  def apply(address: String): Address = new Address(Base58.decode(address).get)
 }
 
 case class Address(override val address: Array[Byte]) extends BlockChainAddress[WavesBlockChain](address) {
