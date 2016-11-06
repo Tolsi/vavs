@@ -167,6 +167,8 @@ abstract class StateStorage[BC <: BlockChain, SignedBlock <: BC#SB[BC#B], BBA <:
   def add(b: SignedBlock): Unit
 
   def switchTo(b: SignedBlock): Unit
+
+  def lastBlock: SignedBlock
 }
 
 trait StateValidator[BC <: BlockChain, Block <: BC#B, Transaction <: BC#T] {

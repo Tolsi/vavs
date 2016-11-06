@@ -1,5 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves.storage.state
 
+import ru.tolsi.aobp.blockchain.waves.block.{SignedBlock, WavesBlock}
 import ru.tolsi.aobp.blockchain.waves.state.WavesStateChangeCalculator
 import ru.tolsi.aobp.blockchain.waves.storage.NotThreadSafeStorage
 import ru.tolsi.aobp.blockchain.waves.storage.block.WavesBlockStorage
@@ -77,4 +78,6 @@ class InMemoryTreeWavesStateStorage(blocksStorage: WavesBlockStorage) extends Ab
   override def isLeadToValidState(t: Seq[WavesTransaction]): Boolean = {
     tryToApplyBlock(t, new mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]()).isSuccess
   }
+
+  override def lastBlock: SignedBlock[WavesBlock] = ???
 }
