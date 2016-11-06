@@ -46,7 +46,7 @@ class Signature64(val value: Array[Byte]) extends Signature[Array[Byte]] {
 
 sealed trait Validable
 
-abstract class AbstractValidationError[+V <: Validable](m: => String) {
+abstract class AbstractValidationError[V <: Validable, VO >: V](m: => String) {
   def message: String = m
 }
 
@@ -58,15 +58,15 @@ trait Signed[+S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]
 trait StateChangeReason
 
 // todo VE, E <: AbstractValidationError[VE] ?
-abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, E <: AbstractValidationError[V]] {
-  def validate(tx: V)(implicit bc: BC): Either[Seq[E], V]
+abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, VO >: V, E <: AbstractValidationError[V, VO]] {
+  def validate(tx: V)(implicit bc: BC): Either[Seq[E], VO]
 }
 
 abstract class BlockChainTransaction[+BC <: BlockChain] extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable
 
 trait BlockChainSignedTransaction[BC <: BlockChain, TX <: BC#T, SI <: Signature[Array[Byte]]] extends BlockChainTransaction[BC] with Signed[TX, SI] {
 
-  protected trait ValidationError extends AbstractValidationError[this.type]
+  protected trait ValidationError extends AbstractValidationError[this.type, BC#T]
 
 }
 
@@ -76,7 +76,7 @@ abstract class BlockChainBlock[+BC <: BlockChain] extends WithByteArraySing with
 
 trait BlockChainSignedBlock[BC <: BlockChain, BL <: BC#B, SI <: Signature[Array[Byte]]] extends BlockChainBlock[BC] with Signed[BL, SI] {
 
-  protected trait ValidationError extends AbstractValidationError[this.type]
+  protected trait ValidationError extends AbstractValidationError[this.type, BC#B]
 
 }
 
@@ -86,17 +86,17 @@ abstract class BlockChainAccount[BC <: BlockChain](val publicKey: Array[Byte], v
 
 abstract class BlockChainAddress[BC <: BlockChain](val address: Array[Byte]) extends Validable
 
-abstract class TransactionValidationError[BC <: BlockChain, +TX <: BC#T](message: => String) extends AbstractValidationError[TX](message)
+abstract class TransactionValidationError[BC <: BlockChain, +TX <: BC#T](message: => String) extends AbstractValidationError[TX, BC#T](message)
 
-abstract class BlockValidationError[BC <: BlockChain, +BL <: BC#B](message: => String) extends AbstractValidationError[BL](message)
+abstract class BlockValidationError[BC <: BlockChain, +BL <: BC#B](message: => String) extends AbstractValidationError[BL, BC#B](message)
 abstract class SignedBlockValidationError[BC <: BlockChain, +BL <: BC#B](message: => String) extends BlockValidationError[BC, BL](message)
 
-abstract class TransactionValidator[BC <: BlockChain, TX <: BC#T] extends ValidatorOnBlockChain[BC, TX, TransactionValidationError[BC, TX]]
+abstract class TransactionValidator[BC <: BlockChain, TX <: BC#T] extends ValidatorOnBlockChain[BC, TX, TX, TransactionValidationError[BC, TX]]
 
-abstract class AbstractSignedTransactionValidator[BC <: BlockChain, TX <: BC#T, STX <: BC#ST[TX]] extends ValidatorOnBlockChain[BC, STX, TransactionValidationError[BC, STX]]
+abstract class AbstractSignedTransactionValidator[BC <: BlockChain, TX <: BC#T, STX <: BC#ST[TX]] extends ValidatorOnBlockChain[BC, STX, BC#T, TransactionValidationError[BC, BC#T]]
 
-abstract class AbstractBlockValidator[BC <: BlockChain, BL <: BC#B] extends ValidatorOnBlockChain[BC, BL,  BlockValidationError[BC, BL]]
-abstract class AbstractSignedBlockValidator[BC <: BlockChain, BL <: BC#B, SBL <: BC#SB[BL]] extends ValidatorOnBlockChain[BC, SBL, SignedBlockValidationError[BC, SBL]]
+abstract class AbstractBlockValidator[BC <: BlockChain, BL <: BC#B] extends ValidatorOnBlockChain[BC, BL,  BC#B, BlockValidationError[BC, BL]]
+abstract class AbstractSignedBlockValidator[BC <: BlockChain, BL <: BC#B, SBL <: BC#SB[BL]] extends ValidatorOnBlockChain[BC, SBL, BC#B, SignedBlockValidationError[BC, BC#B]]
 
 trait BlockTransactionParameters[BC <: BlockChain]
 

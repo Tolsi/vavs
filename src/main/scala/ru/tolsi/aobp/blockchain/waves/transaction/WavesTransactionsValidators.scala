@@ -60,11 +60,11 @@ object SignedTransactionValidator extends AbstractSignedTransactionValidator[Wav
     } else None
   }
 
-  override def validate(stx: WavesBlockChain#ST[WavesBlockChain#T])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesBlockChain#ST[WavesBlockChain#T]]], WavesBlockChain#ST[WavesBlockChain#T]] = {
+  override def validate(stx: WavesBlockChain#ST[WavesBlockChain#T])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesBlockChain#T]], WavesBlockChain#T] = {
     UnsignedTransactionValidator.validate(stx.signed) match {
       case Left(errors) =>
         // todo it works? see definitions todo if not
-        Left(errors.map(_.asInstanceOf[TransactionValidationError[WavesBlockChain, WavesBlockChain#ST[WavesBlockChain#T]]]))
+        Left(errors)
       case Right(_) =>
         val signatureError = signatureValidation(stx)
         if (signatureError.isDefined) {
@@ -90,7 +90,7 @@ class SignedTransactionWithTimeValidator(blockTimestamp: Long)
     } else None
   }
 
-  override def validate(stx: WavesBlockChain#ST[WavesBlockChain#T])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesBlockChain#ST[WavesBlockChain#T]]], WavesBlockChain#ST[WavesBlockChain#T]] = {
+  override def validate(stx: WavesBlockChain#ST[WavesBlockChain#T])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesBlockChain#T]], WavesBlockChain#T] = {
     signedTxValidator.validate(stx) match {
       case Left(errors) =>
         Left(errors)
@@ -232,12 +232,12 @@ object TransferTransactionValidator extends AbstractTransactionValidator[Transfe
 }
 
 object UnsignedTransactionValidator extends TransactionValidator[WavesBlockChain, WavesBlockChain#T] {
-  private def implicitlyValidate[TX <: WavesBlockChain#T](tx: TX)(implicit validator: AbstractTransactionValidator[TX]): Either[Seq[TransactionValidationError[WavesBlockChain, TX]], TX] = {
+  private def implicitlyValidate[TX <: WavesBlockChain#T](tx: TX)(implicit validator: AbstractTransactionValidator[TX]): Either[Seq[TransactionValidationError[WavesBlockChain, TX]], WavesBlockChain#T] = {
     validator.validate(tx)
   }
 
   override def validate(tx: WavesBlockChain#T)(implicit wbc: WavesBlockChain):
-  Either[Seq[TransactionValidationError[WavesBlockChain, WavesTransaction]], WavesTransaction] = {
+  Either[Seq[TransactionValidationError[WavesBlockChain, WavesBlockChain#T]], WavesTransaction] = {
     tx match {
       // todo all state changes validation
       case tx: GenesisTransaction => implicitlyValidate(tx)
@@ -254,11 +254,11 @@ class SignedTransactionValidator(implicit signer: Signer[WavesBlockChain, WavesB
                                  unsignedTxValidator: TransactionValidator[WavesBlockChain, WavesBlockChain#T],
                                  signedValidator: AbstractSignedTransactionValidator[WavesBlockChain, WavesBlockChain#T, WavesBlockChain#ST[WavesBlockChain#T]]
                                 ) extends AbstractSignedTransactionValidator[WavesBlockChain, WavesBlockChain#T, WavesBlockChain#ST[WavesBlockChain#T]] {
-  override def validate(stx: SignedTransaction[WavesTransaction])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, SignedTransaction[WavesTransaction]]], SignedTransaction[WavesTransaction]] = {
+  override def validate(stx: SignedTransaction[WavesTransaction])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesTransaction]], WavesTransaction] = {
     unsignedTxValidator.validate(stx) match {
       case Left(errors) =>
         // todo it works? see definitions todo if not
-        Left(errors.map(_.asInstanceOf[TransactionValidationError[WavesBlockChain, WavesBlockChain#ST[WavesBlockChain#T]]]))
+        Left(errors)
       case Right(errors) =>
         signedValidator.validate(stx)
     }

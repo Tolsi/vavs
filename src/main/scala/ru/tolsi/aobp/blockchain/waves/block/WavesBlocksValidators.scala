@@ -4,11 +4,11 @@ import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
 
 object GenesisBlockValidator extends AbstractBlockValidator[WavesBlockChain, GenesisBlock] {
-  override def validate(tx: GenesisBlock)(implicit wbc: WavesBlockChain): Either[Seq[BlockValidationError[WavesBlockChain, GenesisBlock]], GenesisBlock] = ???
+  override def validate(tx: GenesisBlock)(implicit wbc: WavesBlockChain): Either[Seq[BlockValidationError[WavesBlockChain, GenesisBlock]], WavesBlockChain#B] = ???
 }
 
 object BaseBlockValidator extends AbstractBlockValidator[WavesBlockChain, BaseBlock] {
-  override def validate(tx: BaseBlock)(implicit wbc: WavesBlockChain): Either[Seq[BlockValidationError[WavesBlockChain, BaseBlock]], BaseBlock] = ???
+  override def validate(tx: BaseBlock)(implicit wbc: WavesBlockChain): Either[Seq[BlockValidationError[WavesBlockChain, BaseBlock]], WavesBlockChain#B] = ???
 }
 
 class SignatureError(message: => String) extends SignedBlockValidationError(message)
@@ -20,9 +20,9 @@ class SignedBlockValidator(implicit blockValidator: AbstractBlockValidator[Waves
     } else None
   }
 
-  override def validate(b: SignedBlock[WavesBlock])(implicit wbc: WavesBlockChain): Either[Seq[SignedBlockValidationError[WavesBlockChain, WavesBlockChain#SB[WavesBlockChain#B]]], WavesBlockChain#SB[WavesBlockChain#B]] = {
+  override def validate(b: SignedBlock[WavesBlock])(implicit wbc: WavesBlockChain): Either[Seq[SignedBlockValidationError[WavesBlockChain, WavesBlockChain#B]], WavesBlockChain#B] = {
     blockValidator.validate(b) match {
-      case Left(errors) => Left(errors.map(_.asInstanceOf[SignedBlockValidationError[WavesBlockChain, WavesBlockChain#SB[WavesBlockChain#B]]]))
+      case Left(errors) => Left(errors)
       case Right(tx) =>
         val signatureError = validateSignature(b)
         if (signatureError.isDefined) {
