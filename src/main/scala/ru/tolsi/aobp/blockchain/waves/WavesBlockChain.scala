@@ -2,7 +2,6 @@ package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves.block._
-import ru.tolsi.aobp.blockchain.waves.block.validator.SignedBlockValidator
 import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
 import ru.tolsi.aobp.blockchain.waves.storage.state.AbstractWavesStateStorage
 import ru.tolsi.aobp.blockchain.waves.transaction._
@@ -27,8 +26,6 @@ private[waves] abstract class WavesBlockChain extends BlockChain {
   final val fastHash = Blake256
 
   def stateStorage: SS
-
-  def configuration: WavesConfiguration
 
   override def txValidator(bvp: TVP): SignedTransactionWithTimeValidator = signedTransactionWithTimeValidator(bvp.blockTimestamp)
 

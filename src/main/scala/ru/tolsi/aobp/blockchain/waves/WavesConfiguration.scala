@@ -6,7 +6,7 @@ import scala.concurrent.duration._
 
 object WavesConfiguration {
 
-  abstract class Default(implicit wbc: WavesBlockChain) extends WavesConfiguration {
+  class Default(val chainId: Byte)(implicit wbc: WavesBlockChain) extends WavesConfiguration {
     override val initialBaseTarget = 153722867L
     override val totalWaves = 100000000L
     override val unitsInWave = 100000000L
@@ -49,4 +49,14 @@ abstract class WavesConfiguration(implicit wbc: WavesBlockChain) {
   def maxTxAndBlockDiffMillis: Long
 
   def maxTransactionsPerBlock: Int
+}
+
+trait TestNetWavesBlockChainConfiguration {
+  self: WavesBlockChain =>
+  val configuration: WavesConfiguration = new WavesConfiguration.Default("T".toByte)
+}
+
+trait MainNetWavesBlockChainConfiguration {
+  self: WavesBlockChain =>
+  val configuration: WavesConfiguration = new WavesConfiguration.Default("W".toByte)
 }
