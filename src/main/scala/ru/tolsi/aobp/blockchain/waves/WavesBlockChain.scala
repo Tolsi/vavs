@@ -2,11 +2,11 @@ package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves.block._
+import ru.tolsi.aobp.blockchain.waves.block.validator.signedBlockValidator
 import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
 import ru.tolsi.aobp.blockchain.waves.storage.state.AbstractWavesStateStorage
 import ru.tolsi.aobp.blockchain.waves.transaction._
-import ru.tolsi.aobp.blockchain.waves.transaction.validator.{SignedTransactionWithTimeValidator, WavesTransactionValidationParameters, signedTransactionWithTimeValidator}
-import ru.tolsi.aobp.blockchain.waves.block.validator.signedBlockValidator
+import ru.tolsi.aobp.blockchain.waves.transaction.validator.{WavesTransactionValidationParameters, signedTransactionWithTimeValidator}
 import scorex.crypto.hash.Blake256
 
 private[waves] abstract class WavesBlockChain extends BlockChain {
@@ -16,9 +16,9 @@ private[waves] abstract class WavesBlockChain extends BlockChain {
   final type SB[BL <: B] = SignedBlock[BL]
   final type AC = Account
   final type AD = Address
-  type TXV = AbstractSignedTransactionValidator[this.type, T, ST[T]]
+  type TXV = AbstractSignedTransactionValidator[WavesBlockChain, T, ST[T]]
   type TVP = WavesTransactionValidationParameters
-  type SBV = AbstractSignedBlockValidator[this.type, B, SB[B]]
+  type SBV = AbstractSignedBlockValidator[WavesBlockChain, B, SB[B]]
   type SS = AbstractWavesStateStorage
   type BA = (Address, WavesСurrency)
 
@@ -31,9 +31,10 @@ private[waves] abstract class WavesBlockChain extends BlockChain {
 
   def genesis: WavesBlock
 
-  override def txValidator(bvp: TVP): SignedTransactionWithTimeValidator = signedTransactionWithTimeValidator(bvp.blockTimestamp)
+  def txValidator(bvp: WavesTransactionValidationParameters): AbstractSignedTransactionValidator[WavesBlockChain, WavesTransaction, ST[T]] = signedTransactionWithTimeValidator(bvp.blockTimestamp)
 
-  override val blockValidator: AbstractSignedBlockValidator[WavesBlockChain, WavesBlock, SB[WavesBlock]] = signedBlockValidator
+  def blockValidator: AbstractSignedBlockValidator[WavesBlockChain, WavesBlock, SB[B]] = signedBlockValidator
+
 }
 
 class TestNetWavesBlockChain extends WavesBlockChain with TestNetWavesBlockChainConfiguration

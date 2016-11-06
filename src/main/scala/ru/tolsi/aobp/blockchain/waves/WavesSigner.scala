@@ -1,9 +1,9 @@
 package ru.tolsi.aobp.blockchain.waves
 
 import com.google.common.primitives.Shorts
-import ru.tolsi.aobp.blockchain.base.{Signable, Signature, Signer, WithByteArraySing}
+import ru.tolsi.aobp.blockchain.base._
 
-abstract class WavesSigner[S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]] extends Signer[WavesBlockChain, S, SI] {
+abstract class WavesSigner[S <: Signable with WithByteArraySing, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] extends Signer[WavesBlockChain, S, SV, SI] {
   // todo move to bytes serializer
   protected def arrayWithSize(b: Array[Byte]): Array[Byte] = Shorts.toByteArray(b.length.toShort) ++ b
 

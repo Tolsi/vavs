@@ -4,11 +4,11 @@ import com.google.common.primitives.{Bytes, Longs}
 import org.whispersystems.curve25519.Curve25519
 import ru.tolsi.aobp.blockchain.base.{ArraySign, ArraySignCreator, Signature64, Signed}
 import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
-import ru.tolsi.aobp.blockchain.waves.transaction.{IssueTransaction, SignedTransaction, TransactionType}
+import ru.tolsi.aobp.blockchain.waves.transaction.{GenesisTransaction, IssueTransaction, SignedTransaction, TransactionType}
 
-private[signer] class IssueTransactionSigner extends WavesSigner[IssueTransaction, Signature64]
+private[signer] class IssueTransactionSigner extends WavesSigner[IssueTransaction, SignedTransaction[IssueTransaction], Signature64]
   with ArraySignCreator[IssueTransaction] {
-  override def sign(tx: IssueTransaction)(implicit bc: WavesBlockChain): Signed[IssueTransaction, Signature64] = {
+  override def sign(tx: IssueTransaction)(implicit bc: WavesBlockChain): SignedTransaction[IssueTransaction] = {
     val signature = new Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
       createSign(tx).value))
     SignedTransaction(tx, signature)

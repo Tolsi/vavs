@@ -5,9 +5,9 @@ import ru.tolsi.aobp.blockchain.base.{ArraySign, ArraySignCreator, Signature64, 
 import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
 import ru.tolsi.aobp.blockchain.waves.transaction.{PaymentTransaction, SignedTransaction, TransactionType}
 
-private[signer] class PaymentTransactionSigner extends WavesSigner[PaymentTransaction, Signature64]
+private[signer] class PaymentTransactionSigner extends WavesSigner[PaymentTransaction, SignedTransaction[PaymentTransaction], Signature64]
   with ArraySignCreator[PaymentTransaction] {
-  override def sign(tx: PaymentTransaction)(implicit bc: WavesBlockChain): Signed[PaymentTransaction, Signature64] = {
+  override def sign(tx: PaymentTransaction)(implicit bc: WavesBlockChain): SignedTransaction[PaymentTransaction] = {
     val signature = new Signature64(createSign(tx).value)
     SignedTransaction(tx, signature)
   }

@@ -3,10 +3,11 @@ package ru.tolsi.aobp.blockchain.waves.storage.state
 import ru.tolsi.aobp.blockchain.waves.state.WavesStateChangeCalculator
 import ru.tolsi.aobp.blockchain.waves.storage.NotThreadSafeStorage
 import ru.tolsi.aobp.blockchain.waves.storage.block.WavesBlockStorage
+import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesСurrency}
 
 import scala.collection.mutable
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 trait InMemoryState extends NotThreadSafeStorage {
   self: AbstractWavesStateStorage =>
@@ -46,7 +47,34 @@ class InMemoryTreeWavesStateStorage(blocksStorage: WavesBlockStorage) extends Ab
     updatedState.toMap
   }
 
-  override def isLeadToValidState(b: WavesBlockChain#SB[WavesBlockChain#B]): Boolean = {
+  private def tryToApplyBlock(txs: Seq[WavesBlockChain#T], updatedState: mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]): Try[mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]] = txs.foldLeft[Try[mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]]](Success(updatedState)) {
+    case (m, t) => m match {
+      case Success(m) => tryToApplyBlock(t, m)
+      case f@Failure(_) => f
+    }
+  }
+
+  private def tryToApplyBlock(t: WavesBlockChain#T, updatedState: mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]): Try[mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]] = Try {
+    stateCalculator.calculateStateChanges(t).foreach { bc =>
+      val oldBalance = updatedState.getOrElseUpdate(bc.account, state.getOrElse(bc.account, 0L))
+      val newBalance = Math.addExact(oldBalance, bc.amount)
+      if (newBalance < 0) {
+        throw new IllegalStateException("Negative balance")
+      }
+      updatedState.update(bc.account, newBalance)
+    }
+    updatedState
+  }
+
+  override def isLeadToValidState(b: WavesBlockChain#B): Boolean = {
     tryToApplyBlock(b, new mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]()).isSuccess
+  }
+
+  override def isLeadToValidState(t: WavesTransaction): Boolean = {
+    tryToApplyBlock(t, new mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]()).isSuccess
+  }
+
+  override def isLeadToValidState(t: Seq[WavesTransaction]): Boolean = {
+    tryToApplyBlock(t, new mutable.AnyRefMap[WavesBlockChain#BA, BalanceValue]()).isSuccess
   }
 }
