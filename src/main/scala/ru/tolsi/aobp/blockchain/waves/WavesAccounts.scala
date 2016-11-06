@@ -36,7 +36,7 @@ object Address {
 
   import Account._
 
-  sealed abstract class AddressValidationError(m: => String) extends AbstractValidationError[Address, Address](m)
+  sealed abstract class AddressValidationError(m: => String) extends AbstractValidationError[Address](m)
 
   class WrongAddressVersion(message: => String) extends AddressValidationError(message)
 

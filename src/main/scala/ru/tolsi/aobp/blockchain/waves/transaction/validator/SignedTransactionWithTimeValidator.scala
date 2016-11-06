@@ -12,7 +12,7 @@ private[waves] class SignedTransactionWithTimeValidator(timestamp: Long)
                                                         signedTxValidator: AbstractSignedTransactionValidator[WavesBlockChain, WavesBlockChain#T, WavesBlockChain#ST[WavesBlockChain#T]])
   extends AbstractSignedTransactionWithTimeValidator[WavesBlockChain#ST[WavesBlockChain#T]](timestamp) {
 
-  private[waves] def timestampValidation(tx: WavesBlockChain#ST[WavesBlockChain#T], blockTimestamp: Long)(implicit wbc: WavesBlockChain): Option[WrongTimestamp[WavesBlockChain#ST[WavesBlockChain#T]]] = {
+  private[waves] def timestampValidation(tx: WavesBlockChain#ST[WavesBlockChain#T], blockTimestamp: Long)(implicit wbc: WavesBlockChain): Option[WrongTimestamp] = {
     if (tx.timestamp - blockTimestamp < wbc.configuration.maxTimeDriftMillis) {
       Some(new WrongTimestamp(s"Transaction is far away in future: ${tx.timestamp} - $blockTimestamp < ${wbc.configuration.maxTimeDriftMillis}"))
     } else if (blockTimestamp - tx.timestamp < wbc.configuration.maxTxAndBlockDiffMillis) {

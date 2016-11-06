@@ -9,7 +9,7 @@ import scala.util.{Left, Right}
 private[validator] class SignedTransactionValidator(implicit signer: Signer[WavesBlockChain, WavesBlockChain#T, Signature64],
                                                     unsignedTxValidator: TransactionValidator[WavesBlockChain, WavesBlockChain#T])
   extends AbstractSignedTransactionValidator[WavesBlockChain, WavesBlockChain#T, WavesBlockChain#ST[WavesBlockChain#T]] {
-  private[waves] def signatureValidation(tx: WavesBlockChain#ST[WavesBlockChain#T]): Option[WrongSignature[WavesBlockChain#ST[WavesBlockChain#T]]] = {
+  private[waves] def signatureValidation(tx: WavesBlockChain#ST[WavesBlockChain#T])(implicit wbc: WavesBlockChain): Option[WrongSignature] = {
     if (signer.sign(tx.signed).signature != tx.signature) {
       Some(new WrongSignature(s"Signature is not valid"))
     } else None

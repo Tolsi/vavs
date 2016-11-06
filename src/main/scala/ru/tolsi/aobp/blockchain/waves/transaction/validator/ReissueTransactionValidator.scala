@@ -2,12 +2,12 @@ package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
 import ru.tolsi.aobp.blockchain.base.TransactionValidationError
 import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
-import ru.tolsi.aobp.blockchain.waves.transaction.ReissueTransaction
+import ru.tolsi.aobp.blockchain.waves.transaction.{ReissueTransaction, WavesTransaction}
 
 import scala.util.{Left, Right}
 
 private[validator] class ReissueTransactionValidator extends AbstractTransactionValidator[ReissueTransaction] {
-  override def validate(tx: ReissueTransaction)(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, ReissueTransaction]], ReissueTransaction] = {
+  override def validate(tx: ReissueTransaction)(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesTransaction]], ReissueTransaction] = {
     val errors = Seq(
       addressValidation(tx.recipient),
       negativeAmountValidation(tx.quantity),

@@ -1,18 +1,21 @@
 package ru.tolsi.aobp.blockchain.waves.block.validator
 
-import ru.tolsi.aobp.blockchain.base.{AbstractBlockValidator, AbstractSignedBlockValidator, Signature64, SignedBlockValidationError}
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.base.{AbstractBlockValidator, AbstractSignedBlockValidator, BlockValidationError, Signature64}
+import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
+import ru.tolsi.aobp.blockchain.waves.block.validator.error.WrongSignature
 import ru.tolsi.aobp.blockchain.waves.block.{SignedBlock, WavesBlock}
-import ru.tolsi.aobp.blockchain.waves.transaction.signer.WavesSigner
 
-class SignedBlockValidator(implicit blockValidator: AbstractBlockValidator[WavesBlockChain, WavesBlock]) extends AbstractSignedBlockValidator[WavesBlockChain, WavesBlock, WavesBlockChain#SB[WavesBlock]] {
-  private def validateSignature(b: SignedBlock[WavesBlock])(implicit signer: WavesSigner[WavesBlockChain#B, Signature64]): Option[SignatureError] = {
+import ru.tolsi.aobp.blockchain.waves.transaction.signer.wavesTransactionSigner
+import ru.tolsi.aobp.blockchain.waves.block.signer.wavesBlockSigner
+
+class SignedBlockValidator(implicit blockValidator: AbstractBlockValidator[WavesBlockChain, WavesBlock]) extends AbstractSignedBlockValidator[WavesBlockChain, WavesBlockChain#B, WavesBlockChain#SB[WavesBlockChain#B]] {
+  private def validateSignature(b: WavesBlockChain#SB[WavesBlockChain#B])(implicit wbc: WavesBlockChain, signer: WavesSigner[WavesBlockChain#B, Signature64]): Option[WrongSignature[WavesBlockChain#B]] = {
     if (signer.sign(b).signature != b.signature) {
-      Some(new SignatureError("Signature is not valid"))
+      Some(new WrongSignature("Signature is not valid"))
     } else None
   }
 
-  override def validate(b: SignedBlock[WavesBlock])(implicit wbc: WavesBlockChain): Either[Seq[SignedBlockValidationError[WavesBlockChain, WavesBlockChain#B]], WavesBlockChain#B] = {
+  override def validate(b: SignedBlock[WavesBlock])(implicit wbc: WavesBlockChain): Either[Seq[BlockValidationError[WavesBlockChain, WavesBlockChain#B]], WavesBlockChain#B] = {
     blockValidator.validate(b) match {
       case Left(errors) => Left(errors)
       case Right(tx) =>

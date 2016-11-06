@@ -2,12 +2,12 @@ package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
 import ru.tolsi.aobp.blockchain.base.TransactionValidationError
 import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
-import ru.tolsi.aobp.blockchain.waves.transaction.PaymentTransaction
+import ru.tolsi.aobp.blockchain.waves.transaction.{PaymentTransaction, WavesTransaction}
 
 import scala.util.{Left, Right}
 
 private[validator] class PaymentTransactionValidator extends AbstractTransactionValidator[PaymentTransaction] {
-  override def validate(tx: PaymentTransaction)(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, PaymentTransaction]], PaymentTransaction] = {
+  override def validate(tx: PaymentTransaction)(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesTransaction]], PaymentTransaction] = {
     val errors = Seq(
       addressValidation(tx.recipient),
       negativeAmountValidation(tx.quantity),

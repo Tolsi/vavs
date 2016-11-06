@@ -1,5 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.transaction
 
+import ru.tolsi.aobp.blockchain.waves.transaction.signer.wavesTransactionSigner
+
 package object validator {
   private[validator] implicit val genesisTransactionValidator = new GenesisTransactionValidator
   private[validator] implicit val issueTransactionValidator = new IssueTransactionValidator
@@ -8,6 +10,5 @@ package object validator {
   private[validator] implicit val transferTransactionValidator = new TransferTransactionValidator
   private[validator] implicit val unsignedTransactionValidator = new UnsignedTransactionValidator
   private[validator] implicit val signedTransactionValidator = new SignedTransactionValidator
-
   def signedTransactionWithTimeValidator(timestamp: Long) = new SignedTransactionWithTimeValidator(timestamp)
 }

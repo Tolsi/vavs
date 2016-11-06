@@ -7,9 +7,11 @@ import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
 import ru.tolsi.aobp.blockchain.waves.storage.state.AbstractWavesStateStorage
 import ru.tolsi.aobp.blockchain.waves.transaction._
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.{SignedTransactionWithTimeValidator, WavesTransactionValidationParameters, signedTransactionWithTimeValidator}
+import ru.tolsi.aobp.blockchain.waves.block.validator.signedBlockValidator
 import scorex.crypto.hash.Blake256
 
 private[waves] abstract class WavesBlockChain extends BlockChain {
+  final type BC = this.type
   final type T = WavesTransaction
   final type ST[TX <: T] = SignedTransaction[TX]
   final type B = WavesBlock
@@ -29,7 +31,7 @@ private[waves] abstract class WavesBlockChain extends BlockChain {
 
   def configuration: WavesConfiguration
 
-  override protected def txValidator(bvp: TVP): SignedTransactionWithTimeValidator = signedTransactionWithTimeValidator(bvp.blockTimestamp)
+  override def txValidator(bvp: TVP): SignedTransactionWithTimeValidator = signedTransactionWithTimeValidator(bvp.blockTimestamp)
 
-  override protected val blockValidator: AbstractSignedBlockValidator[WavesBlockChain, WavesBlock, SB[WavesBlock]] = new SignedBlockValidator
+  override val blockValidator: AbstractSignedBlockValidator[WavesBlockChain, WavesBlock, SB[WavesBlock]] = signedBlockValidator
 }

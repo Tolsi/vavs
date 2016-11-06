@@ -3,7 +3,7 @@ package ru.tolsi.aobp.blockchain.waves.transaction.signer
 import com.google.common.primitives.{Bytes, Longs}
 import org.whispersystems.curve25519.Curve25519
 import ru.tolsi.aobp.blockchain.base.{ArraySign, ArraySignCreator, Signature64, Signed}
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
 import ru.tolsi.aobp.blockchain.waves.transaction.{IssueTransaction, SignedTransaction, TransactionType}
 
 private[signer] class IssueTransactionSigner extends WavesSigner[IssueTransaction, Signature64]

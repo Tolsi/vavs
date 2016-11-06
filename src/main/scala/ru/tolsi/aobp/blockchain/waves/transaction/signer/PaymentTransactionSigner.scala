@@ -2,7 +2,7 @@ package ru.tolsi.aobp.blockchain.waves.transaction.signer
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import ru.tolsi.aobp.blockchain.base.{ArraySign, ArraySignCreator, Signature64, Signed}
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
 import ru.tolsi.aobp.blockchain.waves.transaction.{PaymentTransaction, SignedTransaction, TransactionType}
 
 private[signer] class PaymentTransactionSigner extends WavesSigner[PaymentTransaction, Signature64]
