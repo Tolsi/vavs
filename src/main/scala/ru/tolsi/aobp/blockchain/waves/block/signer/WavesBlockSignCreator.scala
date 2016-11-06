@@ -1,10 +1,10 @@
-package ru.tolsi.aobp.blockchain.waves.block
+package ru.tolsi.aobp.blockchain.waves.block.signer
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import ru.tolsi.aobp.blockchain.base.{ArraySign, ArraySignCreator}
 import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
 
-object WavesArraySignCreator extends ArraySignCreator[WavesBlockChain#B] {
+object WavesBlockSignCreator extends ArraySignCreator[WavesBlockChain#B] {
   override def createSign(block: WavesBlockChain#B): ArraySign = {
     val txBytes: Array[Byte] = ???
     //implicitly[BytesSerializer[Seq[Signed[SignedTransaction[T], Signature64]]]].serialize(block.transactions)

@@ -1,7 +1,8 @@
-package ru.tolsi.aobp.blockchain.waves
+package ru.tolsi.aobp.blockchain.waves.transaction.signer
 
 import com.google.common.primitives.Shorts
 import ru.tolsi.aobp.blockchain.base.{Signable, Signature, Signer, WithByteArraySing}
+import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
 
 abstract class WavesSigner[S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]] extends Signer[WavesBlockChain, S, SI] {
   // todo move to bytes serializer
