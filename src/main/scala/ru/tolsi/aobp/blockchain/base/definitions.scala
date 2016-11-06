@@ -100,16 +100,15 @@ abstract class AbstractSignedBlockValidator[BC <: BlockChain, BL <: BC#B, SBL <:
 trait BlockTransactionParameters[BC <: BlockChain]
 
 trait BlockChain {
-  type BC <: this.type
-  type T <: BlockChainTransaction[BC]
+  type T <: BlockChainTransaction[this.type]
   type ST[TX <: T] <: Signed[TX, Signature64] with T
-  type B <: BlockChainBlock[BC]
+  type B <: BlockChainBlock[this.type]
   type SB[BL <: B] <: Signed[BL, Signature64] with B
-  type AC <: BlockChainAccount[BC]
-  type AD <: BlockChainAddress[BC]
-  type TXV <: AbstractSignedTransactionValidator[BC, T, ST[T]]
-  type TVP <: BlockTransactionParameters[BC]
-  type SBV <: AbstractSignedBlockValidator[BC, B, SB[B]]
+  type AC <: BlockChainAccount[this.type]
+  type AD <: BlockChainAddress[this.type]
+  type TXV <: AbstractSignedTransactionValidator[this.type, T, ST[T]]
+  type TVP <: BlockTransactionParameters[this.type]
+  type SBV <: AbstractSignedBlockValidator[this.type, B, SB[B]]
   type BA
 
   def genesis: B

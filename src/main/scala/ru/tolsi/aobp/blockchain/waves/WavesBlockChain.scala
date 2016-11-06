@@ -11,7 +11,6 @@ import ru.tolsi.aobp.blockchain.waves.block.validator.signedBlockValidator
 import scorex.crypto.hash.Blake256
 
 private[waves] abstract class WavesBlockChain extends BlockChain {
-  final type BC = this.type
   final type T = WavesTransaction
   final type ST[TX <: T] = SignedTransaction[TX]
   final type B = WavesBlock
