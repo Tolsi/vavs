@@ -27,6 +27,8 @@ private[waves] abstract class WavesBlockChain extends BlockChain {
 
   def stateStorage: SS
 
+  def configuration: WavesConfiguration
+
   override def txValidator(bvp: TVP): SignedTransactionWithTimeValidator = signedTransactionWithTimeValidator(bvp.blockTimestamp)
 
   override val blockValidator: AbstractSignedBlockValidator[WavesBlockChain, WavesBlock, SB[WavesBlock]] = signedBlockValidator

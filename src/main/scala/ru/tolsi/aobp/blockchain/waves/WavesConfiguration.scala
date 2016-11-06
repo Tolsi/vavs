@@ -17,7 +17,6 @@ object WavesConfiguration {
     override val maxTxAndBlockDiffMillis = 2.hour.toMillis
     override val maxTransactionsPerBlock = 100
 
-
     override val genesisGenerationSignature = new Signature32(Array.fill(32)(0.toByte))
     override val genesisGeneratorAccount: Account = Account(Array.fill(32)(0.toByte))
     override val genesisSignature: Signature64 = new Signature64(Array.fill(64)(0.toByte))
@@ -25,7 +24,7 @@ object WavesConfiguration {
 
 }
 
-abstract class WavesConfiguration(implicit wbc: WavesBlockChain) {
+abstract class WavesConfiguration {
   def chainId: Byte
 
   def initialBaseTarget: Long
@@ -53,10 +52,10 @@ abstract class WavesConfiguration(implicit wbc: WavesBlockChain) {
 
 trait TestNetWavesBlockChainConfiguration {
   self: WavesBlockChain =>
-  val configuration: WavesConfiguration = new WavesConfiguration.Default("T".toByte)
+  override val configuration: WavesConfiguration = new WavesConfiguration.Default("T".toByte)(this)
 }
 
 trait MainNetWavesBlockChainConfiguration {
   self: WavesBlockChain =>
-  val configuration: WavesConfiguration = new WavesConfiguration.Default("W".toByte)
+  override val configuration: WavesConfiguration = new WavesConfiguration.Default("W".toByte)(this)
 }
