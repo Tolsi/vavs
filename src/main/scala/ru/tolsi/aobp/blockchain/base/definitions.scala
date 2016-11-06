@@ -1,6 +1,7 @@
 package ru.tolsi.aobp.blockchain.base
 
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializable
+import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
 import rx.Observable
 import scorex.crypto.encode.Base58
 
@@ -19,7 +20,7 @@ abstract class Signature[V] {
 }
 
 abstract class Signer[BC <: BlockChain, S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]] {
-  def sign(obj: S): Signed[S, SI]
+  def sign(obj: S)(implicit bc: BC): Signed[S, SI]
 }
 
 abstract class ArrayByteSignature extends Signature[Array[Byte]] {
@@ -58,69 +59,69 @@ trait StateChangeReason
 
 // todo VE, E <: AbstractValidationError[VE] ?
 abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, E <: AbstractValidationError[V]] {
-  def validate(tx: V): Either[Seq[E], V]
+  def validate(tx: V)(implicit bc: BC): Either[Seq[E], V]
 }
 
+abstract class BlockChainTransaction[+BC <: BlockChain] extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable
+
+trait BlockChainSignedTransaction[BC <: BlockChain, TX <: BC#T, SI <: Signature[Array[Byte]]] extends BlockChainTransaction[BC] with Signed[TX, SI] {
+
+  protected trait ValidationError extends AbstractValidationError[this.type]
+
+}
+
+abstract class BlockChainBlock[+BC <: BlockChain] extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable {
+  type Id
+}
+
+trait BlockChainSignedBlock[BC <: BlockChain, BL <: BC#B, SI <: Signature[Array[Byte]]] extends BlockChainBlock[BC] with Signed[BL, SI] {
+
+  protected trait ValidationError extends AbstractValidationError[this.type]
+
+}
+
+case class StateChange[BC <: BlockChain](account: BC#BA, amount: Long)
+
+abstract class BlockChainAccount[BC <: BlockChain](val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
+
+abstract class BlockChainAddress[BC <: BlockChain](val address: Array[Byte]) extends Validable
+
+abstract class TransactionValidationError[BC <: BlockChain, +TX <: BC#T](message: => String) extends AbstractValidationError[TX](message)
+
+abstract class BlockValidationError[BC <: BlockChain, +BL <: BC#B](message: => String) extends AbstractValidationError[BL](message)
+abstract class SignedBlockValidationError[BC <: BlockChain, +BL <: BC#B](message: => String) extends BlockValidationError[BC, BL](message)
+
+abstract class TransactionValidator[BC <: BlockChain, TX <: BC#T] extends ValidatorOnBlockChain[BC, TX, TransactionValidationError[BC, TX]]
+
+abstract class AbstractSignedTransactionValidator[BC <: BlockChain, TX <: BC#T, STX <: BC#ST[TX]] extends ValidatorOnBlockChain[BC, STX, TransactionValidationError[BC, STX]]
+
+abstract class AbstractBlockValidator[BC <: BlockChain, BL <: BC#B] extends ValidatorOnBlockChain[BC, BL,  BlockValidationError[BC, BL]]
+abstract class AbstractSignedBlockValidator[BC <: BlockChain, BL <: BC#B, SBL <: BC#SB[BL]] extends ValidatorOnBlockChain[BC, SBL, SignedBlockValidationError[BC, SBL]]
+
+trait BlockTransactionParameters[BC <: BlockChain]
+
 trait BlockChain {
-  protected abstract class BlockChainTransaction extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable
-
-  protected trait BlockChainSignedTransaction[TX <: T, SI <: Signature[Array[Byte]]] extends BlockChainTransaction with Signed[TX, SI] {
-
-    protected trait ValidationError extends AbstractValidationError[this.type]
-
-  }
-
-  protected abstract class BlockChainBlock extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable {
-    type Id
-  }
-
-  protected trait BlockChainSignedBlock[BL <: B, SI <: Signature[Array[Byte]]] extends BlockChainBlock with Signed[BL, SI] {
-
-    protected trait ValidationError extends AbstractValidationError[this.type]
-
-  }
-
-  trait BlockTransactionParameters
-
-  type T <: BlockChainTransaction
+  type T <: BlockChainTransaction[this.type]
   type ST[TX <: T] <: Signed[TX, Signature64] with T
-  type B <: BlockChainBlock
+  type B <: BlockChainBlock[this.type]
   type SB[BL <: B] <: Signed[BL, Signature64] with B
-  type AС <: BlockChainAccount
-  type AD <: BlockChainAddress
-  type TXV <: AbstractSignedTransactionValidator[T, ST[T]]
-  type TVP <: BlockTransactionParameters
-  type SBV <: AbstractSignedBlockValidator[B, SB[B]]
+  type AC <: BlockChainAccount[this.type]
+  type AD <: BlockChainAddress[this.type]
+  type TXV <: AbstractSignedTransactionValidator[this.type, T, ST[T]]
+  type TVP <: BlockTransactionParameters[this.type]
+  type SBV <: AbstractSignedBlockValidator[this.type, B, SB[B]]
   type BA
 
-  case class StateChange(account: BA, amount: Long)
+  def genesis: B
 
-  protected abstract class BlockChainAccount(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
+  def txValidator(bvp: TVP): TXV
 
-  protected abstract class BlockChainAddress(val address: Array[Byte]) extends Validable
-
-  abstract class TransactionValidationError[+TX <: T](message: => String) extends AbstractValidationError[TX](message)
-
-  abstract class BlockValidationError[+BL <: B](message: => String) extends AbstractValidationError[BL](message)
-  abstract class SignedBlockValidationError[+BL <: B](message: => String) extends BlockValidationError[BL](message)
-
-  protected abstract class TransactionValidator[TX <: T] extends ValidatorOnBlockChain[this.type, TX, TransactionValidationError[TX]]
-
-  protected abstract class AbstractSignedTransactionValidator[TX <: T, STX <: ST[TX]] extends ValidatorOnBlockChain[this.type, STX, TransactionValidationError[STX]]
-
-  protected abstract class AbstractBlockValidator[BL <: B] extends ValidatorOnBlockChain[this.type, BL,  BlockValidationError[BL]]
-  protected abstract class AbstractSignedBlockValidator[BL <: B, SBL <: SB[BL]] extends ValidatorOnBlockChain[this.type, SBL, SignedBlockValidationError[SBL]]
-
-  protected def genesis: B
-
-  protected def txValidator(bvp: TVP): TXV
-
-  protected def blockValidator: SBV
+  def blockValidator: SBV
 }
 
 
 abstract class Wallet[BC <: BlockChain] {
-  def createNewAccount: BC#AС
+  def createNewAccount: BC#AC
 }
 
 abstract class BlockGenerator[BC <: BlockChain] {

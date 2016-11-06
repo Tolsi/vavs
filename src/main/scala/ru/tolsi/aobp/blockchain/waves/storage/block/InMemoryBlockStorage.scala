@@ -6,9 +6,9 @@ import ru.tolsi.aobp.blockchain.waves.storage.NotThreadSafeStorage
 
 import scala.collection.mutable
 
-abstract class WavesBlockStorage[W <: WavesBlockChain] extends BlockStorage[W, W#SB[W#B], W#B#Id]
+abstract class WavesBlockStorage extends BlockStorage[WavesBlockChain, WavesBlockChain#SB[WavesBlockChain#B], WavesBlockChain#B#Id]
 
-class InMemoryBlockStorage[W <: WavesBlockChain] extends WavesBlockStorage[W] with NotThreadSafeStorage {
+class InMemoryBlockStorage extends WavesBlockStorage with NotThreadSafeStorage {
   private val map = new mutable.AnyRefMap[BlockId, SignedBlock]()
 
   override def put(block: SignedBlock): Unit = map += (block.signature -> block)
