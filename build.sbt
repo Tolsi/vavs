@@ -23,7 +23,7 @@ libraryDependencies ++= Seq(
   "com.h2database" % "h2-mvstore" % "1.+",
   "ch.qos.logback" % "logback-classic" % "1.+",
   "ch.qos.logback" % "logback-core" % "1.+",
-  "com.typesafe.play" %% "play-json" % "2.+",
+  "com.typesafe.play" %% "play-json" % "2.5.9",
 
   "org.consensusresearch" %% "scrypto" % "1.2.0-RC3" exclude("com.typesafe.play", "play-json_2.11"),
   "commons-net" % "commons-net" % "3.+",
