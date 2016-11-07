@@ -1,17 +1,14 @@
 package ru.tolsi.aobp.blockchain.base
 
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializable
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
 import rx.Observable
 import scorex.crypto.encode.Base58
 
-trait Sign[V]
-case class ArraySign(value: Array[Byte]) extends Sign[Array[Byte]]
-trait WithArraySign
-trait ArraySignCreator[WAS <: WithArraySign] {
-  def createSign(ws: WAS): ArraySign
+case class Sign[+WS <: WithSign](value: Array[Byte])
+trait WithSign
+trait SignCreator[WS <: WithSign] {
+  def createSign(ws: WS): Sign[WS]
 }
-trait WithByteArraySing extends WithArraySign
 
 trait Signable
 
@@ -19,7 +16,7 @@ abstract class Signature[V] {
   def value: V
 }
 
-abstract class Signer[BC <: BlockChain, S <: Signable with WithByteArraySing, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] {
+abstract class Signer[BC <: BlockChain, S <: Signable with WithSign, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] {
   def sign(obj: S)(implicit bc: BC): SV
 }
 
@@ -50,7 +47,7 @@ abstract class AbstractValidationError[V <: Validable](m: => String) {
   def message: String = m
 }
 
-trait Signed[+S <: Signable with WithByteArraySing, SI <: Signature[Array[Byte]]] {
+trait Signed[+S <: Signable with WithSign, SI <: Signature[Array[Byte]]] {
   def signature: SI
   def signed: S
 }
@@ -65,7 +62,7 @@ abstract class ValidatorOnBlockChain[BC <: BlockChain, V <: Validable, VO >: V <
   def validate(tx: V)(implicit bc: BC): ResultT
 }
 
-abstract class BlockChainTransaction[+BC <: BlockChain] extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable
+abstract class BlockChainTransaction[+BC <: BlockChain] extends WithSign with Signable with Validable with StateChangeReason with BytesSerializable
 
 trait BlockChainSignedTransaction[BC <: BlockChain, TX <: BC#T, SI <: Signature[Array[Byte]]] extends BlockChainTransaction[BC] with Signed[TX, SI] {
 
@@ -73,7 +70,7 @@ trait BlockChainSignedTransaction[BC <: BlockChain, TX <: BC#T, SI <: Signature[
 
 }
 
-abstract class BlockChainBlock[+BC <: BlockChain] extends WithByteArraySing with Signable with Validable with StateChangeReason with BytesSerializable {
+abstract class BlockChainBlock[+BC <: BlockChain] extends WithSign with Signable with Validable with StateChangeReason with BytesSerializable {
   type Id
 }
 

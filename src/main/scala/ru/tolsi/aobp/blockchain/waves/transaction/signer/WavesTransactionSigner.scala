@@ -1,8 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.signer
 
 import ru.tolsi.aobp.blockchain.base._
-import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
 import ru.tolsi.aobp.blockchain.waves.transaction._
+import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
 
 
 private[waves] class WavesTransactionSigner extends WavesSigner[WavesBlockChain#T, SignedTransaction[WavesBlockChain#T], Signature64] {

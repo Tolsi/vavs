@@ -1,6 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.block
 
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.signedTransactionWithTimeValidator
+import ru.tolsi.aobp.blockchain.waves.block.signer.wavesBlockSigner
 
 package object validator {
   implicit val genesisBlockValidator = new GenesisBlockValidator
