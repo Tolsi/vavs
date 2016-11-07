@@ -29,7 +29,7 @@ class UnsignedBlockValidator(tv: Long => SignedTransactionWithTimeValidator) ext
       Either.cond(b.transactions == b.transactions.sorted, b, Seq(new WrongTransactionsOrder("Wrong transactions order")))
     })
 
-    val transactionsValidationResult = blockValidationResult.right.flatMap(b => {
+    val transactionsValidationResult = transactionsOrderValidationResult.right.flatMap(b => {
       val validator = tv(b.timestamp)
       b.transactions.foldLeft[ResultT](Right[ErrorsSeqT, ValidatedT](b)) {
         case (r, t) =>

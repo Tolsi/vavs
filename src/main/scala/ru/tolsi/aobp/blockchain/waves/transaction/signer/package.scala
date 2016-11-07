@@ -1,5 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.transaction
 
+import ru.tolsi.aobp.blockchain.waves.transaction.signcreator._
+
 package object signer {
   private[signer] implicit val genesisTransactionSigner = new GenesisTransactionSigner
   private[signer] implicit val paymentTransactionSigner = new PaymentTransactionSigner
