@@ -4,7 +4,6 @@
 dependencyOverrides in ThisBuild ++= Set(
   "ch.qos.logback" % "logback-classic" % "1.1.7",
   "ch.qos.logback" % "logback-core" % "1.1.7",
-  "com.artima.supersafe" % "supersafe_2.11.8" % "1.1.0",
   "com.chuusai" % "shapeless_2.11" % "2.3.2",
   "com.datadoghq" % "java-dogstatsd-client" % "2.1.1",
   "com.esotericsoftware" % "kryo" % "4.0.0",
