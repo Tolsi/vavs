@@ -1,7 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.block
 
 import ru.tolsi.aobp.blockchain.base._
-import ru.tolsi.aobp.blockchain.waves.{Asset, Waves, WavesBlockChain, WavesMoney}
+import ru.tolsi.aobp.blockchain.waves._
 
 
 abstract class WavesBlock extends BlockChainBlock[WavesBlockChain] {

@@ -1,8 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves.state
 
-import ru.tolsi.aobp.blockchain.base.{BlockChain, StateChange}
+import ru.tolsi.aobp.blockchain.base.BlockChain
 import ru.tolsi.aobp.blockchain.waves.transaction._
-import ru.tolsi.aobp.blockchain.waves.{Address, Waves, WavesBlockChain}
+import ru.tolsi.aobp.blockchain.waves._
 
 abstract class StateChangeCalculator[BC <: BlockChain] {
   def calculateStateChanges(t: BC#T): Seq[StateChange[BC]]

@@ -1,7 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.signcreator
 
 import com.google.common.primitives.{Bytes, Longs}
-import ru.tolsi.aobp.blockchain.base.{Sign, SignCreator}
+import ru.tolsi.aobp.blockchain.base.SignCreator
+import ru.tolsi.aobp.blockchain.waves.{Sign, SignCreator}
 import ru.tolsi.aobp.blockchain.waves.serializer.BytesUtils._
 import ru.tolsi.aobp.blockchain.waves.transaction.{IssueTransaction, TransactionType}
 

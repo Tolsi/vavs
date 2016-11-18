@@ -1,6 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import ru.tolsi.aobp.blockchain.base.{AbstractValidationError, BlockChainAccount, BlockChainAddress}
+import ru.tolsi.aobp.blockchain.base.BlockChainAddress
 import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
 import scorex.crypto.encode.Base58
 import scorex.crypto.signatures.Curve25519

@@ -9,18 +9,19 @@ import ru.tolsi.aobp.blockchain.waves.transaction._
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.{WavesTransactionValidationParameters, signedTransactionWithTimeValidator}
 import scorex.crypto.hash.Blake256
 
-private[waves] abstract class WavesBlockChain extends BlockChain {
-  final type T = WavesTransaction
-  final type ST[TX <: T] = SignedTransaction[TX]
-  final type B = WavesBlock
-  final type SB[BL <: B] = SignedBlock[BL]
-  final type AC = Account
-  final type AD = Address
-  type TXV = AbstractSignedTransactionValidator[WavesBlockChain, T, ST[T]]
-  type TVP = WavesTransactionValidationParameters
-  type SBV = AbstractSignedBlockValidator[WavesBlockChain, B, SB[B]]
-  type SS = AbstractWavesStateStorage
-  type BA = (Address, WavesСurrency)
+//private[waves]
+abstract class WavesBlockChain {
+//  final type T = WavesTransaction
+//  final type ST[TX <: T] = SignedTransaction[TX]
+//  final type B = WavesBlock
+//  final type SB[BL <: B] = SignedBlock[BL]
+//  final type AC = Account
+//  final type AD = Address
+//  type TXV = AbstractSignedTransactionValidator[WavesBlockChain, T, ST[T]]
+//  type TVP = WavesTransactionValidationParameters
+//  type SBV = AbstractSignedBlockValidator[WavesBlockChain, B, SB[B]]
+//  type SS = AbstractWavesStateStorage
+//  type BA = (Address, WavesСurrency)
 
   final val secureHash = ScorexHashChain
   final val fastHash = Blake256

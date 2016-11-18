@@ -1,7 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.transaction
 
-import ru.tolsi.aobp.blockchain.base.{BlockChainSignedTransaction, Signature64}
-import ru.tolsi.aobp.blockchain.waves.{Address, WavesBlockChain, WavesСurrency}
+import ru.tolsi.aobp.blockchain.base.BlockChainSignedTransaction
+import ru.tolsi.aobp.blockchain.waves._
 
 case class SignedTransaction[TX <: WavesBlockChain#T](tx: TX, signature: Signature64) extends WavesTransaction with BlockChainSignedTransaction[WavesBlockChain, TX, Signature64] {
   override def signed: TX = tx

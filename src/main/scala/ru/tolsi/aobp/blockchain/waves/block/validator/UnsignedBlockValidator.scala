@@ -1,7 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.block.validator
 
 import ru.tolsi.aobp.blockchain.base._
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves.{AbstractBlockValidator, BlockValidationError, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.block.validator.error.{WrongState, WrongTransaction, WrongTransactionsOrder}
 import ru.tolsi.aobp.blockchain.waves.block.{BaseBlock, GenesisBlock}
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.SignedTransactionWithTimeValidator

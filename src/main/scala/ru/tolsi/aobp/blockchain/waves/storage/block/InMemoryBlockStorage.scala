@@ -1,7 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves.storage.block
 
-import ru.tolsi.aobp.blockchain.base.BlockStorage
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves.{BlockStorage, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.storage.NotThreadSafeStorage
 
 import scala.collection.mutable

@@ -1,7 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.block.validator
 
-import ru.tolsi.aobp.blockchain.base.{AbstractBlockValidator, AbstractSignedBlockValidator, BlockValidationError, Signature64}
-import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
+import ru.tolsi.aobp.blockchain.base.{AbstractBlockValidator, AbstractSignedBlockValidator, BlockValidationError}
+import ru.tolsi.aobp.blockchain.waves._
 import ru.tolsi.aobp.blockchain.waves.block.validator.error.WrongSignature
 import ru.tolsi.aobp.blockchain.waves.block.{SignedBlock, WavesBlock}
 

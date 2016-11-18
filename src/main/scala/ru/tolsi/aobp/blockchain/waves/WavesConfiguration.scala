@@ -1,6 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import ru.tolsi.aobp.blockchain.base.{Signature32, Signature64}
+import ru.tolsi.aobp.blockchain.base.Signature64
 import ru.tolsi.aobp.blockchain.waves.block.GenesisBlock
 import ru.tolsi.aobp.blockchain.waves.transaction.GenesisTransaction
 
