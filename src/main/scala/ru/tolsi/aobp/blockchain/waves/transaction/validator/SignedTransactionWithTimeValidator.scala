@@ -1,7 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
 import ru.tolsi.aobp.blockchain.base._
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves._
 import ru.tolsi.aobp.blockchain.waves.transaction.SignedTransaction
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.error.WrongTimestamp
 

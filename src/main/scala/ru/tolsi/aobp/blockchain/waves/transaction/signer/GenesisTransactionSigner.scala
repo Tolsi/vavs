@@ -1,9 +1,9 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.signer
 
 import com.google.common.primitives.Bytes
-import ru.tolsi.aobp.blockchain.base.{SignCreator, Signature64}
+import ru.tolsi.aobp.blockchain.base.Signature64
 import ru.tolsi.aobp.blockchain.waves.transaction.{GenesisTransaction, SignedTransaction}
-import ru.tolsi.aobp.blockchain.waves.{WavesBlockChain, WavesSigner}
+import ru.tolsi.aobp.blockchain.waves.{SignCreator, Signature64, WavesBlockChain, WavesSigner}
 
 private[signer] class GenesisTransactionSigner(implicit signCreator: SignCreator[GenesisTransaction]) extends WavesSigner[GenesisTransaction, SignedTransaction[GenesisTransaction], Signature64] {
   val TypeLength = 1

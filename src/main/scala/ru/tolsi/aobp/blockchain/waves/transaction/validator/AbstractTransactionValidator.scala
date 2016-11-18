@@ -1,8 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
-import ru.tolsi.aobp.blockchain.base.TransactionValidator
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.error._
-import ru.tolsi.aobp.blockchain.waves.{Asset, Waves, WavesBlockChain, WavesMoney}
+import ru.tolsi.aobp.blockchain.waves._
 
 import scala.util.Try
 

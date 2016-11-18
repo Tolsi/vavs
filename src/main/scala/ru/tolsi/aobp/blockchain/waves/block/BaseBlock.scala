@@ -1,8 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves.block
 
-import ru.tolsi.aobp.blockchain.base.{Signature32, Signature64}
+import ru.tolsi.aobp.blockchain.base.Signature64
 import ru.tolsi.aobp.blockchain.waves.transaction.SignedTransaction
-import ru.tolsi.aobp.blockchain.waves.{Asset, Waves, WavesBlockChain, WavesMoney}
+import ru.tolsi.aobp.blockchain.waves._
 
 case class BaseBlock(timestamp: Long,
                      reference: Signature64,

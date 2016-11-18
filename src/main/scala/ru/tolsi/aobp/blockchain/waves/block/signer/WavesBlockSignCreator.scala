@@ -2,8 +2,8 @@ package ru.tolsi.aobp.blockchain.waves.block.signer
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer
-import ru.tolsi.aobp.blockchain.base.{Sign, SignCreator}
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.base.SignCreator
+import ru.tolsi.aobp.blockchain.waves.{Sign, SignCreator, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.transaction.SignedTransaction
 
 private[signer] class WavesBlockSignCreator(implicit signedTransactionsSerializer: BytesSerializer[Seq[SignedTransaction[WavesBlockChain#T]]]) extends SignCreator[WavesBlockChain#B] {

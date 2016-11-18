@@ -1,7 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
-import ru.tolsi.aobp.blockchain.base.TransactionValidationError
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves.{TransactionValidationError, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.transaction.{PaymentTransaction, WavesTransaction}
 
 import scala.util.{Left, Right}

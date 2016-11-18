@@ -1,7 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.signcreator
 
 import ru.tolsi.aobp.blockchain.base._
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves.{Sign, SignCreator, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.transaction._
 
 
