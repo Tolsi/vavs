@@ -2,18 +2,18 @@ package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
 import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves._
-import ru.tolsi.aobp.blockchain.waves.transaction.SignedTransaction
+import ru.tolsi.aobp.blockchain.waves.transaction.{SignedTransaction, WavesTransaction}
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.error.WrongTimestamp
 
 import scala.util.{Left, Right}
 
 private[waves] class SignedTransactionWithTimeValidator(timestamp: Long)
-                                                       (implicit signer: Signer[WavesBlockChain, WavesBlockChain#T, SignedTransaction[WavesBlockChain#T], Signature64],
-                                                        txValidator: TransactionValidator[WavesBlockChain, WavesBlockChain#T],
-                                                        signedTxValidator: AbstractSignedTransactionValidator[WavesBlockChain, WavesBlockChain#T, WavesBlockChain#ST[WavesBlockChain#T]])
-  extends AbstractSignedTransactionWithTimeValidator[WavesBlockChain#ST[WavesBlockChain#T]](timestamp) {
+                                                       (implicit signer: Signer[WavesTransaction, WavesBlockChain#ST[WavesTransaction], Signature64],
+                                                        txValidator: TransactionValidator[WavesTransaction],
+                                                        signedTxValidator: AbstractSignedTransactionValidator[WavesTransaction, WavesBlockChain#ST[WavesTransaction]])
+  extends AbstractSignedTransactionWithTimeValidator[WavesBlockChain#ST[WavesTransaction]](timestamp) {
 
-  private[waves] def timestampValidation(tx: WavesBlockChain#ST[WavesBlockChain#T], blockTimestamp: Long)(implicit wbc: WavesBlockChain): Option[WrongTimestamp] = {
+  private[waves] def timestampValidation(tx: WavesBlockChain#ST[WavesTransaction], blockTimestamp: Long)(implicit wbc: WavesBlockChain): Option[WrongTimestamp] = {
     if (tx.timestamp - blockTimestamp < wbc.configuration.maxTimeDriftMillis) {
       Some(new WrongTimestamp(s"Transaction is far away in future: ${tx.timestamp} - $blockTimestamp < ${wbc.configuration.maxTimeDriftMillis}"))
     } else if (blockTimestamp - tx.timestamp < wbc.configuration.maxTxAndBlockDiffMillis) {
@@ -21,7 +21,7 @@ private[waves] class SignedTransactionWithTimeValidator(timestamp: Long)
     } else None
   }
 
-  override def validate(stx: WavesBlockChain#ST[WavesBlockChain#T])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesBlockChain#T]], WavesBlockChain#T] = {
+  override def validate(stx: WavesBlockChain#ST[WavesTransaction])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesTransaction]], WavesTransaction] = {
     signedTxValidator.validate(stx) match {
       case Left(errors) =>
         Left(errors)

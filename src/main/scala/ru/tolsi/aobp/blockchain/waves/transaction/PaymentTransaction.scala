@@ -1,8 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves.transaction
 
-import ru.tolsi.aobp.blockchain.waves.{Address, Waves, WavesBlockChain, WavesСurrency}
+import ru.tolsi.aobp.blockchain.waves._
 
-case class PaymentTransaction(sender: WavesBlockChain#AC,
+case class PaymentTransaction(sender: Account,
                               override val recipient: Address,
                               override val quantity: Long,
                               override val fee: Long,

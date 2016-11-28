@@ -1,51 +1,51 @@
 package ru.tolsi.aobp.blockchain.waves.state
 
-import ru.tolsi.aobp.blockchain.base.BlockChain
 import ru.tolsi.aobp.blockchain.waves.transaction._
 import ru.tolsi.aobp.blockchain.waves._
+import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
 
-abstract class StateChangeCalculator[BC <: BlockChain] {
-  def calculateStateChanges(t: BC#T): Seq[StateChange[BC]]
-  def calculateStateChanges(txs: Seq[BC#T]): Seq[StateChange[BC]]
-  def calculateStateChanges(b: BC#B): Seq[StateChange[BC]]
+abstract class StateChangeCalculator {
+  def calculateStateChanges(t: WavesTransaction): Seq[StateChange]
+  def calculateStateChanges(txs: Seq[WavesTransaction]): Seq[StateChange]
+  def calculateStateChanges(b: WavesBlock): Seq[StateChange]
 }
 
-class WavesStateChangeCalculator extends StateChangeCalculator[WavesBlockChain] {
-  def calculateStateChanges(b: WavesBlockChain#B): Seq[StateChange[WavesBlockChain]] = {
+class WavesStateChangeCalculator extends StateChangeCalculator {
+  def calculateStateChanges(b: WavesBlock): Seq[StateChange] = {
     val blockFee = b.transactions.map(t => (t.signed.feeCurrency, t.signed.fee))
     val txs = b.transactions.map(_.signed)
     calculateStateChanges(txs) ++ calculateGeneratorFee(b.generator.address, txs)
   }
 
-  private[state] def calculateGeneratorFee(generatorAddress: Address, txs: Seq[WavesTransaction]): Seq[StateChange[WavesBlockChain]] = {
-    txs.map(t => StateChange[WavesBlockChain]((generatorAddress, t.feeCurrency), t.fee))
+  private[state] def calculateGeneratorFee(generatorAddress: Address, txs: Seq[WavesTransaction]): Seq[StateChange] = {
+    txs.map(t => StateChange(BalanceAccount(generatorAddress, t.feeCurrency), t.fee))
   }
 
-  override def calculateStateChanges(t: WavesTransaction): Seq[StateChange[WavesBlockChain]] = t match {
+  override def calculateStateChanges(t: WavesTransaction): Seq[StateChange] = t match {
     case t: GenesisTransaction => Seq(
-      StateChange[WavesBlockChain]((t.recipient, Waves), t.quantity)
+      StateChange(BalanceAccount(t.recipient, Waves), t.quantity)
     )
     case t: PaymentTransaction => Seq(
-      StateChange[WavesBlockChain]((t.sender.address, t.feeCurrency), -t.fee),
-      StateChange[WavesBlockChain]((t.sender.address, Waves), -t.quantity),
-      StateChange[WavesBlockChain]((t.recipient, Waves), t.quantity)
+      StateChange(BalanceAccount(t.sender.address, t.feeCurrency), -t.fee),
+      StateChange(BalanceAccount(t.sender.address, Waves), -t.quantity),
+      StateChange(BalanceAccount(t.recipient, Waves), t.quantity)
     )
     case t: IssueTransaction => Seq(
-      StateChange[WavesBlockChain]((t.sender.address, t.feeCurrency), -t.fee),
-      StateChange[WavesBlockChain]((t.sender.address, t.issue.currency.b), t.quantity)
+      StateChange(BalanceAccount(t.sender.address, t.feeCurrency), -t.fee),
+      StateChange(BalanceAccount(t.sender.address, t.issue.currency.b), t.quantity)
     )
     case t: ReissueTransaction => Seq(
-      StateChange[WavesBlockChain]((t.sender.address, t.feeCurrency), -t.fee),
-      StateChange[WavesBlockChain]((t.sender.address, t.issue.currency.b), t.quantity)
+      StateChange(BalanceAccount(t.sender.address, t.feeCurrency), -t.fee),
+      StateChange(BalanceAccount(t.sender.address, t.issue.currency.b), t.quantity)
     )
     case t: TransferTransaction => Seq(
-      StateChange[WavesBlockChain]((t.sender.address, t.feeCurrency), -t.fee),
-      StateChange[WavesBlockChain]((t.sender.address, t.transfer.currency.fold(identity, identity)), -t.quantity),
-      StateChange[WavesBlockChain]((t.recipient, t.transfer.currency.fold(identity, identity)), t.quantity)
+      StateChange(BalanceAccount(t.sender.address, t.feeCurrency), -t.fee),
+      StateChange(BalanceAccount(t.sender.address, t.transfer.currency.fold(identity, identity)), -t.quantity),
+      StateChange(BalanceAccount(t.recipient, t.transfer.currency.fold(identity, identity)), t.quantity)
     )
   }
 
-  override def calculateStateChanges(txs: Seq[WavesTransaction]): Seq[StateChange[WavesBlockChain]] = {
+  override def calculateStateChanges(txs: Seq[WavesTransaction]): Seq[StateChange] = {
     txs.flatMap(calculateStateChanges)
   }
 }

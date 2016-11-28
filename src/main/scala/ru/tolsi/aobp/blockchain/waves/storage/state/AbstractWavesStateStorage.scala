@@ -1,10 +1,10 @@
 package ru.tolsi.aobp.blockchain.waves.storage.state
 
-import ru.tolsi.aobp.blockchain.base.StateValidator
+import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
 import ru.tolsi.aobp.blockchain.waves.storage.block.WavesBlockStorage
-import ru.tolsi.aobp.blockchain.waves.{StateStorage, StateValidator, WavesBlockChain, WavesСurrency}
+import ru.tolsi.aobp.blockchain.waves._
 
 // todo separate later
-private[waves] abstract class AbstractWavesStateStorage(blocksStorage: WavesBlockStorage) extends StateStorage[WavesBlockChain, WavesBlockChain#SB[WavesBlockChain#B], WavesBlockChain#BA] with StateValidator[WavesBlockChain, WavesBlockChain#B, WavesBlockChain#T] {
+private[waves] abstract class AbstractWavesStateStorage(blocksStorage: WavesBlockStorage) extends StateStorage[WavesBlockChain#SB[WavesBlock], BalanceAccount] with StateValidator {
   override type BalanceValue = Long
 }

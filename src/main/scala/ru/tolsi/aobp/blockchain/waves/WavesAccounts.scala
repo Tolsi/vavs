@@ -1,6 +1,5 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import ru.tolsi.aobp.blockchain.base.BlockChainAddress
 import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
 import scorex.crypto.encode.Base58
 import scorex.crypto.signatures.Curve25519
@@ -26,7 +25,7 @@ object Account {
 }
 
 case class Account(override val publicKey: PublicKey, override val privateKey: Option[PrivateKey] = None)(implicit wbc: WavesBlockChain)
-  extends BlockChainAccount[WavesBlockChain](publicKey, privateKey) {
+  extends BlockChainAccount(publicKey, privateKey) {
 
   import Account._
 
@@ -73,7 +72,7 @@ object Address {
   def apply(address: String): Address = new Address(Base58.decode(address).get)
 }
 
-case class Address(override val address: Array[Byte]) extends BlockChainAddress[WavesBlockChain](address) {
+case class Address(override val address: Array[Byte]) extends BlockChainAddress(address) {
 
   import Address._
 

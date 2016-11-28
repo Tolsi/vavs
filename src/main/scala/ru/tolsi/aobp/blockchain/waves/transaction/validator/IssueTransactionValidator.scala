@@ -49,7 +49,7 @@ private[validator] class IssueTransactionValidator extends AbstractTransactionVa
     } else None
   }
 
-  override def validate(tx: IssueTransaction)(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesBlockChain, WavesTransaction]], IssueTransaction] = {
+  override def validate(tx: IssueTransaction)(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesTransaction]], IssueTransaction] = {
     val errors = Seq(
       addressValidation(tx.recipient),
       smallFeeValidation(tx.fee),

@@ -2,7 +2,7 @@ package ru.tolsi.aobp.blockchain.waves.transaction
 
 import ru.tolsi.aobp.blockchain.waves._
 
-case class IssueTransaction(sender: WavesBlockChain#AC,
+case class IssueTransaction(sender: Account,
                             name: Array[Byte],
                             description: Array[Byte],
                             issue: WavesMoney[Right[Waves.type, Asset]],

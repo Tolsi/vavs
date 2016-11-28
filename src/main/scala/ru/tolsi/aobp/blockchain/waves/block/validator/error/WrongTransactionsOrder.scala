@@ -1,6 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves.block.validator.error
 
-import ru.tolsi.aobp.blockchain.base._
-import ru.tolsi.aobp.blockchain.waves.{BlockValidationError, WavesBlockChain}
+import ru.tolsi.aobp.blockchain.waves.BlockValidationError
+import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
 
-class WrongTransactionsOrder(message: => String) extends BlockValidationError[WavesBlockChain, WavesBlockChain#B](message)
+class WrongTransactionsOrder(message: => String) extends BlockValidationError[WavesBlock](message)

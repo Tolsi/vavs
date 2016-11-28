@@ -3,7 +3,7 @@ package ru.tolsi.aobp.blockchain.waves.transaction
 import ru.tolsi.aobp.blockchain.waves._
 
 case class TransferTransaction(timestamp: Long,
-                               sender: WavesBlockChain#AC,
+                               sender: Account,
                                recipient: Address,
                                transfer: WavesMoney[Either[Waves.type, Asset]],
                                feeMoney: WavesMoney[Either[Waves.type, Asset]],

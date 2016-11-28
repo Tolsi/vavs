@@ -1,7 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.signer
 
 import org.whispersystems.curve25519.Curve25519
-import ru.tolsi.aobp.blockchain.base.Signature64
 import ru.tolsi.aobp.blockchain.waves.transaction.{ReissueTransaction, SignedTransaction}
 import ru.tolsi.aobp.blockchain.waves.{SignCreator, Signature64, WavesBlockChain, WavesSigner}
 

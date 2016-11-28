@@ -1,11 +1,12 @@
 package ru.tolsi.aobp.blockchain.waves.storage.block
 
+import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
 import ru.tolsi.aobp.blockchain.waves.{BlockStorage, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.storage.NotThreadSafeStorage
 
 import scala.collection.mutable
 
-abstract class WavesBlockStorage extends BlockStorage[WavesBlockChain, WavesBlockChain#SB[WavesBlockChain#B], WavesBlockChain#B#Id]
+abstract class WavesBlockStorage extends BlockStorage[WavesBlockChain#SB[WavesBlock], WavesBlock#Id]
 
 class InMemoryBlockStorage extends WavesBlockStorage with NotThreadSafeStorage {
   private val map = new mutable.AnyRefMap[BlockId, SignedBlock]()

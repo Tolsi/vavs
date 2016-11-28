@@ -2,7 +2,7 @@ package ru.tolsi.aobp.blockchain.waves.transaction
 
 import ru.tolsi.aobp.blockchain.waves._
 
-case class ReissueTransaction(sender: WavesBlockChain#AC,
+case class ReissueTransaction(sender: Account,
                               issue: WavesMoney[Right[Waves.type, Asset]],
                               reissuable: Boolean,
                               feeMoney: WavesMoney[Left[Waves.type, Asset]],
