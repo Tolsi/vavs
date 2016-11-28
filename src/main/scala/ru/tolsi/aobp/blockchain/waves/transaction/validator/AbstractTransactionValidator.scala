@@ -2,13 +2,14 @@ package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.error._
 import ru.tolsi.aobp.blockchain.waves._
+import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 
 import scala.util.Try
 
-private[validator] abstract class AbstractTransactionValidator[TX <: WavesBlockChain#T] extends TransactionValidator[WavesBlockChain, TX] {
+private[validator] abstract class AbstractTransactionValidator[TX <: WavesTransaction] extends TransactionValidator[TX] {
   private[waves] val MaxAttachmentSize = 140
 
-  private[waves] def addressValidation(address: WavesBlockChain#AD)(implicit wbc: WavesBlockChain): Option[WrongAddress] = {
+  private[waves] def addressValidation(address: Address)(implicit wbc: WavesBlockChain): Option[WrongAddress] = {
     address.validate.map(error => new WrongAddress(error.message))
   }
 

@@ -1,7 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import ru.tolsi.aobp.blockchain.base.Signature64
-import ru.tolsi.aobp.blockchain.waves.block.GenesisBlock
+import ru.tolsi.aobp.blockchain.waves.block.{GenesisBlock, WavesBlock}
 import ru.tolsi.aobp.blockchain.waves.transaction.GenesisTransaction
 
 import scala.concurrent.duration._
@@ -69,7 +68,7 @@ trait TestNetWavesBlockChainConfiguration {
     require(transactions.foldLeft(0L)(_ + _.signed.quantity) == configuration.initialBalance)
     transactions
   }
-  override val genesis: B = GenesisBlock(genesisTimestamp, new Signature64(Array.fill[Byte](64)(0)), configuration.initialBaseTarget, configuration.genesisGeneratorAccount, configuration.genesisGenerationSignature, WavesMoney[Either[Waves.type, Asset]](0, Left(Waves)), genesisTransactions)
+  override val genesis: WavesBlock = GenesisBlock(genesisTimestamp, new Signature64(Array.fill[Byte](64)(0)), configuration.initialBaseTarget, configuration.genesisGeneratorAccount, configuration.genesisGenerationSignature, WavesMoney[Either[Waves.type, Asset]](0, Left(Waves)), genesisTransactions)
 
 }
 

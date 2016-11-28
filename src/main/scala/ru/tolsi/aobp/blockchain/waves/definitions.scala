@@ -2,11 +2,17 @@ package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base.LyHash
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializable
+import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
+import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 import rx.Observable
 import scorex.crypto.encode.Base58
 
+case class BalanceAccount(address: Address, currency: WavesСurrency)
+
 case class Sign[+WS <: WithSign](value: Array[Byte])
+
 trait WithSign
+
 trait SignCreator[WS <: WithSign] {
   def createSign(ws: WS): Sign[WS]
 }
@@ -18,7 +24,7 @@ abstract class Signature[V] {
 }
 
 abstract class Signer[S <: Signable with WithSign, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] {
-  def sign(obj: S)(implicit bc: BC): SV
+  def sign(obj: S)(implicit bc: WavesBlockChain): SV
 }
 
 abstract class ArrayByteSignature extends Signature[Array[Byte]] {
@@ -81,17 +87,17 @@ trait BlockChainSignedBlock[BL <: BlockChainBlock, SI <: Signature[Array[Byte]]]
 
 }
 
-case class StateChange(account: Account, amount: Long)
+case class StateChange(account: BalanceAccount, amount: Long)
 
 abstract class BlockChainAccount(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
 
 abstract class BlockChainAddress(val address: Array[Byte]) extends Validable
 
-abstract class TransactionValidationError[+BlockChainTransaction <: BlockChainTransaction](message: => String) extends AbstractValidationError[BlockChainTransaction](message)
+abstract class TransactionValidationError[+TX <: BlockChainTransaction](message: => String) extends AbstractValidationError[TX](message)
 
 abstract class BlockValidationError[+BL <: BlockChainBlock](message: => String) extends AbstractValidationError[BlockChainBlock](message)
 
-abstract class TransactionValidator[BlockChainTransaction <: BlockChainTransaction] extends ValidatorOnBlockChain[BlockChainTransaction, BlockChainTransaction, TransactionValidationError[BlockChainTransaction]]
+abstract class TransactionValidator[TX <: BlockChainTransaction] extends ValidatorOnBlockChain[TX, BlockChainTransaction, TransactionValidationError[TX]]
 
 abstract class AbstractSignedTransactionValidator[TX <: BlockChainTransaction, STX <: Signed[TX, Signature64]] extends ValidatorOnBlockChain[STX, BlockChainTransaction, TransactionValidationError[BlockChainTransaction]]
 
@@ -154,9 +160,9 @@ abstract class StateStorage[SignedBlock <: Signed[BlockChainTransaction, Signatu
 }
 
 trait StateValidator {
-  def isLeadToValidState(b: BlockChainBlock): Boolean
-  def isLeadToValidState(t: BlockChainTransaction): Boolean
-  def isLeadToValidState(t: Seq[BlockChainTransaction]): Boolean
+  def isLeadToValidState(b: WavesBlock): Boolean
+  def isLeadToValidState(t: WavesTransaction): Boolean
+  def isLeadToValidState(t: Seq[WavesTransaction]): Boolean
 }
 
 sealed trait ProtocolRequest

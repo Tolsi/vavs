@@ -1,22 +1,20 @@
 package ru.tolsi.aobp.blockchain.waves.block.validator
 
-import ru.tolsi.aobp.blockchain.base._
 import ru.tolsi.aobp.blockchain.waves.{AbstractBlockValidator, BlockValidationError, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.block.validator.error.{WrongState, WrongTransaction, WrongTransactionsOrder}
-import ru.tolsi.aobp.blockchain.waves.block.{BaseBlock, GenesisBlock}
+import ru.tolsi.aobp.blockchain.waves.block.{BaseBlock, GenesisBlock, WavesBlock}
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.SignedTransactionWithTimeValidator
 import ru.tolsi.aobp.blockchain.waves.transaction.transactionsOrdering
 
-class UnsignedBlockValidator(tv: Long => SignedTransactionWithTimeValidator) extends AbstractBlockValidator[WavesBlockChain, WavesBlockChain#B] {
-  private def implicitlyValidate[BL <: WavesBlockChain#B](b: BL)(implicit wbc: WavesBlockChain, validator: AbstractBlockValidator[WavesBlockChain, BL]): Either[Seq[BlockValidationError[WavesBlockChain, WavesBlockChain#B]], WavesBlockChain#B] = {
+class UnsignedBlockValidator(tv: Long => SignedTransactionWithTimeValidator) extends AbstractBlockValidator[WavesBlock] {
+  private def implicitlyValidate[BL <: WavesBlock](b: BL)(implicit wbc: WavesBlockChain, validator: AbstractBlockValidator[BL]): validator.ResultT = {
     validator.validate(b)
   }
 
   // todo rewrite validators to returns all errors list (either concat)
-  override def validate(b: WavesBlockChain#B)(implicit wbc: WavesBlockChain): Either[Seq[BlockValidationError[WavesBlockChain, WavesBlockChain#B]], WavesBlockChain#B] = {
-    val lastBlockTs = wbc.stateStorage.lastBlock.block.timestamp
-    val timeValidationResult =
-      Either.cond(b.transactions.forall(tx => (lastBlockTs - tx.timestamp) <= wbc.configuration.maxTxAndBlockDiffMillis), b, Seq(new WrongTransaction("There are transactions from the past")))
+  override def validate(b: WavesBlock)(implicit wbc: WavesBlockChain): Either[Seq[BlockValidationError[WavesBlock]], WavesBlock] = {
+    val lastBlockTs: Long = ??? // todo wbc.stateStorage.lastBlock.block.timestamp
+    val timeValidationResult: Either[Seq[BlockValidationError[WavesBlock]], WavesBlock] = Either.cond(b.transactions.forall(tx => (lastBlockTs - tx.timestamp) <= wbc.configuration.maxTxAndBlockDiffMillis), b, Seq(new WrongTransaction("There are transactions from the past")))
 
     val blockValidationResult = timeValidationResult.right.flatMap {
       // todo not from future and from last block time, see original waves
@@ -37,7 +35,7 @@ class UnsignedBlockValidator(tv: Long => SignedTransactionWithTimeValidator) ext
       }
     })
 
-    val stateValidationResult = transactionsValidationResult.right.flatMap(b =>
+    val stateValidationResult: Either[Seq[BlockValidationError[WavesBlock]], WavesBlock] = transactionsValidationResult.right.flatMap(b =>
       Either.cond(wbc.stateStorage.isLeadToValidState(b), b, Seq(new WrongState("Block transactions leads to illegal state"))))
 
     stateValidationResult

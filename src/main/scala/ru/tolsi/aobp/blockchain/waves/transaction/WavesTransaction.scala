@@ -2,7 +2,7 @@ package ru.tolsi.aobp.blockchain.waves.transaction
 
 import ru.tolsi.aobp.blockchain.waves.{BlockChainTransaction, _}
 
-abstract class WavesTransaction extends BlockChainTransaction[WavesBlockChain] {
+abstract class WavesTransaction extends BlockChainTransaction {
   def typeId: TransactionType.Value
 
   val recipient: Address

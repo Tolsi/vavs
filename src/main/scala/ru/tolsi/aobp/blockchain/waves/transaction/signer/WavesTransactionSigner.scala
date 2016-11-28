@@ -5,8 +5,8 @@ import ru.tolsi.aobp.blockchain.waves.transaction._
 import ru.tolsi.aobp.blockchain.waves.{Signature64, WavesBlockChain, WavesSigner}
 
 
-private[waves] class WavesTransactionSigner extends WavesSigner[WavesBlockChain#T, SignedTransaction[WavesBlockChain#T], Signature64] {
-  private def implicitlySign[TX <: WavesBlockChain#T](tx: TX)(implicit bc: WavesBlockChain, signer: WavesSigner[TX, SignedTransaction[TX], Signature64]): SignedTransaction[TX] = {
+private[waves] class WavesTransactionSigner extends WavesSigner[WavesTransaction, SignedTransaction[WavesTransaction], Signature64] {
+  private def implicitlySign[TX <: WavesTransaction](tx: TX)(implicit bc: WavesBlockChain, signer: WavesSigner[TX, SignedTransaction[TX], Signature64]): SignedTransaction[TX] = {
     signer.sign(tx)
   }
 
