@@ -5,7 +5,7 @@ import ru.tolsi.aobp.blockchain.waves.state.WavesStateChangeCalculator
 import ru.tolsi.aobp.blockchain.waves.storage.NotThreadSafeStorage
 import ru.tolsi.aobp.blockchain.waves.storage.block.WavesBlockStorage
 import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
-import ru.tolsi.aobp.blockchain.waves.{Address, BalanceAccount, WavesBlockChain, WavesСurrency}
+import ru.tolsi.aobp.blockchain.waves._
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
@@ -25,11 +25,11 @@ trait InMemoryState extends NotThreadSafeStorage {
 }
 
 class InMemoryTreeWavesStateStorage(blocksStorage: WavesBlockStorage) extends AbstractWavesStateStorage(blocksStorage) with InMemoryState with NotThreadSafeStorage {
-  override def add(b: WavesBlockChain#SB[WavesBlock]): Unit = {
+  override def add(b: SB[WavesBlock]): Unit = {
     tryToApplyBlock(b, state).foreach(_ => blocksStorage.put(b))
   }
 
-  override def switchTo(b: WavesBlockChain#SB[WavesBlock]): Unit = {
+  override def switchTo(b: SB[WavesBlock]): Unit = {
     // todo try to rollback to new state
     ???
   }

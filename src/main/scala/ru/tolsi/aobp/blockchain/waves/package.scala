@@ -1,14 +1,18 @@
 package ru.tolsi.aobp.blockchain
 
 import ru.tolsi.aobp.blockchain.base.LyHash
+import ru.tolsi.aobp.blockchain.waves.block.{SignedBlock, WavesBlock}
+import ru.tolsi.aobp.blockchain.waves.transaction.{SignedTransaction, WavesTransaction}
 
 import scala.util.Either
 
 package object waves {
   type Seed = Array[Byte]
   type PrivateKey = Array[Byte]
-  //  type Address = Array[Byte]
   type PublicKey = Array[Byte]
+
+  type ST[TX <: WavesTransaction] = SignedTransaction[TX]
+  type SB[BL <: WavesBlock] = SignedBlock[BL]
 
   sealed trait WavesСurrency
 

@@ -1,11 +1,12 @@
 package ru.tolsi.aobp.blockchain.waves.block
 
+import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializable
 import ru.tolsi.aobp.blockchain.waves._
 import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 
 
-abstract class WavesBlock extends BlockChainBlock {
-  override type Id = Signature64
+abstract class WavesBlock extends WithSign with Signable with Validable with StateChangeReason with BytesSerializable {
+  type Id = Signature64
 
   def version: Byte
 
@@ -20,7 +21,7 @@ abstract class WavesBlock extends BlockChainBlock {
 
   def fee: WavesMoney[Either[Waves.type, Asset]]
 
-  def transactions: Seq[WavesBlockChain#ST[WavesTransaction]]
+  def transactions: Seq[ST[WavesTransaction]]
 
   def generator: Account
 }

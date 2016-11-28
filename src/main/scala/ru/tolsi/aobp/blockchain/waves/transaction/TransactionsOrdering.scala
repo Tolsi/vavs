@@ -1,10 +1,10 @@
 package ru.tolsi.aobp.blockchain.waves.transaction
 
-import ru.tolsi.aobp.blockchain.waves.{Asset, Waves, WavesBlockChain}
+import ru.tolsi.aobp.blockchain.waves.{Asset, ST, Waves, WavesBlockChain}
 import scorex.crypto.encode.Base58
 
-class TransactionsOrdering extends Ordering[WavesBlockChain#ST[WavesTransaction]] {
-  private def orderBy(t: WavesBlockChain#ST[WavesTransaction]): (Long, Long, String) = {
+class TransactionsOrdering extends Ordering[ST[WavesTransaction]] {
+  private def orderBy(t: ST[WavesTransaction]): (Long, Long, String) = {
     //TODO sort by real asset value of fee?
     val byFee = t.feeCurrency match {
       case Waves =>
@@ -16,7 +16,7 @@ class TransactionsOrdering extends Ordering[WavesBlockChain#ST[WavesTransaction]
     val byAddress = Base58.encode(t.signature.value)
     (byFee, byTimestamp, byAddress)
   }
-  override def compare(first: WavesBlockChain#ST[WavesTransaction], second: WavesBlockChain#ST[WavesTransaction]): Int = {
+  override def compare(first: ST[WavesTransaction], second: ST[WavesTransaction]): Int = {
     implicitly[Ordering[(Long, Long, String)]].compare(orderBy(first), orderBy(second))
   }
 }

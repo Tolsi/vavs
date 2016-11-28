@@ -2,22 +2,22 @@ package ru.tolsi.aobp.blockchain.waves.transaction
 
 import ru.tolsi.aobp.blockchain.waves._
 
-case class SignedTransaction[TX <: WavesTransaction](tx: TX, signature: Signature64) extends WavesTransaction with BlockChainSignedTransaction[TX, Signature64] {
-  override def signed: TX = tx
+case class SignedTransaction[TX <: WavesTransaction](tx: TX, signature: Signature64) extends WavesTransaction with Signed[TX, Signature64] {
+  val signed: TX = tx
 
-  override def typeId: TransactionType.Value = tx.typeId
+  override val typeId: TransactionType.Value = tx.typeId
 
   override val recipient: Address = tx.recipient
 
-  override def timestamp: Long = tx.timestamp
+  override val timestamp: Long = tx.timestamp
 
-  override def amount: BigDecimal = tx.amount
+  override val amount: BigDecimal = tx.amount
 
-  override def quantity: Long = tx.quantity
+  override val quantity: Long = tx.quantity
 
-  override def currency: WavesСurrency = tx.currency
+  override val currency: WavesСurrency = tx.currency
 
-  override def fee: Long = tx.fee
+  override val fee: Long = tx.fee
 
-  override def feeCurrency: WavesСurrency = tx.feeCurrency
+  override val feeCurrency: WavesСurrency = tx.feeCurrency
 }

@@ -5,6 +5,6 @@ import ru.tolsi.aobp.blockchain.waves.storage.block.WavesBlockStorage
 import ru.tolsi.aobp.blockchain.waves._
 
 // todo separate later
-private[waves] abstract class AbstractWavesStateStorage(blocksStorage: WavesBlockStorage) extends StateStorage[WavesBlockChain#SB[WavesBlock], BalanceAccount] with StateValidator {
+private[waves] abstract class AbstractWavesStateStorage(blocksStorage: WavesBlockStorage) extends StateStorage[SB[WavesBlock], BalanceAccount] with StateValidator {
   override type BalanceValue = Long
 }

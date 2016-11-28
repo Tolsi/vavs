@@ -1,7 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves
 
 import ru.tolsi.aobp.blockchain.base.LyHash
-import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializable
 import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
 import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 import rx.Observable
@@ -48,7 +47,7 @@ class Signature64(val value: Array[Byte]) extends Signature[Array[Byte]] {
   require(value.length == 64, "Signature64 should have 64 bytes")
 }
 
-sealed trait Validable
+trait Validable
 
 abstract class AbstractValidationError[V <: Validable](m: => String) {
   def message: String = m
@@ -69,49 +68,27 @@ abstract class ValidatorOnBlockChain[V <: Validable, VO >: V <: Validable, E <: 
   def validate(tx: V)(implicit bc: WavesBlockChain): ResultT
 }
 
-abstract class BlockChainTransaction extends WithSign with Signable with Validable with StateChangeReason with BytesSerializable
-
-trait BlockChainSignedTransaction[BlockChainTransaction, SI <: Signature[Array[Byte]]] extends BlockChainTransaction with Signed[BlockChainTransaction, SI] {
-
-  protected trait ValidationError extends AbstractValidationError[BlockChainTransaction]
-
-}
-
-abstract class BlockChainBlock extends WithSign with Signable with Validable with StateChangeReason with BytesSerializable {
-  type Id
-}
-
-trait BlockChainSignedBlock[BL <: BlockChainBlock, SI <: Signature[Array[Byte]]] extends BlockChainBlock with Signed[BL, SI] {
-
-  protected trait ValidationError extends AbstractValidationError[BlockChainBlock]
-
-}
-
 case class StateChange(account: BalanceAccount, amount: Long)
 
-abstract class BlockChainAccount(val publicKey: Array[Byte], val privateKey: Option[Array[Byte]])
+abstract class TransactionValidationError[+TX <: WavesTransaction](message: => String) extends AbstractValidationError[TX](message)
 
-abstract class BlockChainAddress(val address: Array[Byte]) extends Validable
+abstract class BlockValidationError[+BL <: WavesBlock](message: => String) extends AbstractValidationError[WavesBlock](message)
 
-abstract class TransactionValidationError[+TX <: BlockChainTransaction](message: => String) extends AbstractValidationError[TX](message)
+abstract class TransactionValidator[TX <: WavesTransaction] extends ValidatorOnBlockChain[TX, WavesTransaction, TransactionValidationError[TX]]
 
-abstract class BlockValidationError[+BL <: BlockChainBlock](message: => String) extends AbstractValidationError[BlockChainBlock](message)
+abstract class AbstractSignedTransactionValidator[TX <: WavesTransaction, STX <: Signed[TX, Signature64]] extends ValidatorOnBlockChain[STX, WavesTransaction, TransactionValidationError[WavesTransaction]]
 
-abstract class TransactionValidator[TX <: BlockChainTransaction] extends ValidatorOnBlockChain[TX, BlockChainTransaction, TransactionValidationError[TX]]
-
-abstract class AbstractSignedTransactionValidator[TX <: BlockChainTransaction, STX <: Signed[TX, Signature64]] extends ValidatorOnBlockChain[STX, BlockChainTransaction, TransactionValidationError[BlockChainTransaction]]
-
-abstract class AbstractBlockValidator[BL <: BlockChainBlock] extends ValidatorOnBlockChain[BL, BlockChainBlock, BlockValidationError[BlockChainBlock]]
-abstract class AbstractSignedBlockValidator[BL <: BlockChainBlock] extends ValidatorOnBlockChain[Signed[BL, Signature64], BlockChainBlock, BlockValidationError[BlockChainBlock]]
+abstract class AbstractBlockValidator[BL <: WavesBlock] extends ValidatorOnBlockChain[BL, WavesBlock, BlockValidationError[WavesBlock]]
+abstract class AbstractSignedBlockValidator[BL <: WavesBlock] extends ValidatorOnBlockChain[Signed[BL, Signature64], WavesBlock, BlockValidationError[WavesBlock]]
 
 trait BlockTransactionParameters
 
 abstract class Wallet {
-  def createNewAccount: BlockChainAccount
+  def createNewAccount: Account
 }
 
 abstract class BlockGenerator {
-  def blocks: Observable[BlockChainBlock]
+  def blocks: Observable[WavesBlock]
 }
 
 trait BlockChainApp {
@@ -119,13 +96,13 @@ trait BlockChainApp {
 
   def wallet: Wallet
 
-  def utx: BlockChainTransaction
+  def utx: WavesTransaction
 
   def miner: BlockGenerator
 }
 
 // todo хранить блокчейн как дерево и удалять неосновные ветки после N
-abstract class BlockStorage[BSB <: Signed[BlockChainTransaction, Signature64], BId <: BlockChainBlock#Id] {
+abstract class BlockStorage[BSB <: Signed[WavesTransaction, Signature64], BId <: WavesBlock#Id] {
   type BlockId = BId
   type SignedBlock = BSB
   def put(block: SignedBlock): Unit
@@ -138,14 +115,14 @@ abstract class BlockStorage[BSB <: Signed[BlockChainTransaction, Signature64], B
 }
 
 abstract class UnconfirmedTransactionStorage {
-  def put(tx: BlockChainTransaction): Unit
+  def put(tx: WavesTransaction): Unit
 
-  def all: Seq[BlockChainTransaction]
+  def all: Seq[WavesTransaction]
 
-  def remove(tx: BlockChainTransaction): Option[BlockChainTransaction]
+  def remove(tx: WavesTransaction): Option[WavesTransaction]
 }
 
-abstract class StateStorage[SignedBlock <: Signed[BlockChainTransaction, Signature64], BBA <: BlockChainAccount] {
+abstract class StateStorage[SignedBlock <: Signed[WavesTransaction, Signature64], BBA <: Account] {
   type BalanceValue = Long
 
   def currentState: Map[BBA, BalanceValue]
@@ -170,17 +147,17 @@ sealed trait ProtocolRequest
 trait IncomingNetworkLayer {
   def incomingRequests: Observable[ProtocolRequest]
 
-  def incomingTx: Observable[BlockChainTransaction]
+  def incomingTx: Observable[WavesTransaction]
 
-  def incomingBlocks: Observable[BlockChainBlock]
+  def incomingBlocks: Observable[WavesBlock]
 }
 
 trait OutgoingNetworkLayer {
   def outgoingRequests: Observable[ProtocolRequest]
 
-  def outgoingTx: Observable[BlockChainTransaction]
+  def outgoingTx: Observable[WavesTransaction]
 
-  def outgoingBlocks: Observable[BlockChainBlock]
+  def outgoingBlocks: Observable[WavesBlock]
 }
 
 trait NetworkLayer extends IncomingNetworkLayer with OutgoingNetworkLayer

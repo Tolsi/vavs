@@ -24,8 +24,7 @@ object Account {
   }
 }
 
-case class Account(override val publicKey: PublicKey, override val privateKey: Option[PrivateKey] = None)(implicit wbc: WavesBlockChain)
-  extends BlockChainAccount(publicKey, privateKey) {
+case class Account(publicKey: PublicKey, privateKey: Option[PrivateKey] = None)(implicit wbc: WavesBlockChain) {
 
   import Account._
 
@@ -72,7 +71,7 @@ object Address {
   def apply(address: String): Address = new Address(Base58.decode(address).get)
 }
 
-case class Address(override val address: Array[Byte]) extends BlockChainAddress(address) {
+case class Address(address: Array[Byte]) extends Validable {
 
   import Address._
 
