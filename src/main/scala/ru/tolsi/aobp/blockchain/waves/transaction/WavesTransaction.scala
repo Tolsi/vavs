@@ -1,8 +1,9 @@
 package ru.tolsi.aobp.blockchain.waves.transaction
 
-import ru.tolsi.aobp.blockchain.waves.{BlockChainTransaction, _}
+import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializable
+import ru.tolsi.aobp.blockchain.waves._
 
-abstract class WavesTransaction extends BlockChainTransaction {
+abstract class WavesTransaction extends WithSign with Signable with Validable with StateChangeReason with BytesSerializable {
   def typeId: TransactionType.Value
 
   val recipient: Address
