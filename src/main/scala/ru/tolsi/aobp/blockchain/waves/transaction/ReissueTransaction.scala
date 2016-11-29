@@ -13,9 +13,9 @@ case class ReissueTransaction(sender: Account,
 
   override def amount: BigDecimal = issue.amount
 
-  override def currency: WavesСurrency = issue.currency.b
+  override def currency: WavesСurrency = issue.currency.value
 
-  override def feeCurrency: WavesСurrency = feeMoney.currency.a
+  override def feeCurrency: WavesСurrency = feeMoney.currency.value
 
   override def fee: Long = feeMoney.value
 

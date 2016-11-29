@@ -7,7 +7,7 @@ import ru.tolsi.aobp.blockchain.waves.transaction.{ReissueTransaction, Transacti
 
 private[signcreator] class ReissueTransactionSignCreator extends SignCreator[ReissueTransaction] {
   override def createSign(tx: ReissueTransaction): Sign[ReissueTransaction] = {
-    Sign(Bytes.concat(Array(TransactionType.ReissueTransaction.id.toByte), tx.sender.publicKey, tx.issue.currency.b.id,
+    Sign(Bytes.concat(Array(TransactionType.ReissueTransaction.id.toByte), tx.sender.publicKey, tx.issue.currency.value.id,
       Longs.toByteArray(tx.quantity),
       Array(booleanToByte(tx.reissuable)), Longs.toByteArray(tx.fee), Longs.toByteArray(tx.timestamp)))
   }

@@ -4,7 +4,7 @@ version := "0.0.1"
 
 scalaVersion := "2.12.0"
 
-scalacOptions in Universal ++= Seq("-unchecked", "-deprecation", "-notailcalls", "-Xfatal-warnings")
+scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-g:notailcalls", "-Xfatal-warnings", "-deprecation")
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-contrib" % "2.4.+",

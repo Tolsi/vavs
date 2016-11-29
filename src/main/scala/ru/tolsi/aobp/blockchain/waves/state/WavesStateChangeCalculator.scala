@@ -32,11 +32,11 @@ class WavesStateChangeCalculator extends StateChangeCalculator {
     )
     case t: IssueTransaction => Seq(
       StateChange(BalanceAccount(t.sender.address, t.feeCurrency), -t.fee),
-      StateChange(BalanceAccount(t.sender.address, t.issue.currency.b), t.quantity)
+      StateChange(BalanceAccount(t.sender.address, t.issue.currency.value), t.quantity)
     )
     case t: ReissueTransaction => Seq(
       StateChange(BalanceAccount(t.sender.address, t.feeCurrency), -t.fee),
-      StateChange(BalanceAccount(t.sender.address, t.issue.currency.b), t.quantity)
+      StateChange(BalanceAccount(t.sender.address, t.issue.currency.value), t.quantity)
     )
     case t: TransferTransaction => Seq(
       StateChange(BalanceAccount(t.sender.address, t.feeCurrency), -t.fee),
