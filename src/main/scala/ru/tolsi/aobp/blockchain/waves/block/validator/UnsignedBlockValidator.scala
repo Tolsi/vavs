@@ -14,7 +14,7 @@ class UnsignedBlockValidator(tv: Long => SignedTransactionWithTimeValidators) ex
 
   // todo rewrite validators to returns all errors list (either concat)
   override def validate(b: WavesBlock)(implicit wbc: WavesBlockChain): Either[Seq[BlockValidationError[WavesBlock]], WavesBlock] = {
-    val lastBlockTs: Long = ??? // todo wbc.stateStorage.lastBlock.block.timestamp
+    val lastBlockTs: Long = wbc.stateStorage.lastBlock.block.timestamp
     val timeValidationResult: Either[Seq[BlockValidationError[WavesBlock]], WavesBlock] = Either.cond(b.transactions.forall(tx => (lastBlockTs - tx.timestamp) <= wbc.configuration.maxTxAndBlockDiffMillis), b, Seq(new WrongTransaction("There are transactions from the past")))
 
     val blockValidationResult = timeValidationResult.right.flatMap {
