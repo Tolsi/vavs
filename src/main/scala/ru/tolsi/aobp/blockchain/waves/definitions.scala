@@ -8,12 +8,10 @@ import scorex.crypto.encode.Base58
 
 case class BalanceAccount(address: Address, currency: WavesСurrency)
 
-case class Sign[+WS <: WithSign](value: Array[Byte])
+case class Sign[+WS <: Signable](value: Array[Byte])
 
-trait WithSign
-
-trait SignCreator[WS <: WithSign] {
-  def createSign(ws: WS): Sign[WS]
+trait DataForSignCreator[WS <: Signable] {
+  def createDataForSign(ws: WS): Sign[WS]
 }
 
 trait Signable
@@ -22,7 +20,7 @@ abstract class Signature[V] {
   def value: V
 }
 
-abstract class Signer[S <: Signable with WithSign, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] {
+abstract class Signer[S <: Signable, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] {
   def sign(obj: S)(implicit bc: WavesBlockChain): SV
 }
 
@@ -53,7 +51,7 @@ abstract class AbstractValidationError[+V <: Validable](m: => String) {
   def message: String = m
 }
 
-trait Signed[+S <: Signable with WithSign, SI <: Signature[Array[Byte]]] {
+trait Signed[+S <: Signable, SI <: Signature[Array[Byte]]] {
   def signature: SI
   def signed: S
 }

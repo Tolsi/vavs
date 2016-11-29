@@ -3,11 +3,11 @@ package ru.tolsi.aobp.blockchain.waves.block.signer
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer
 import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
-import ru.tolsi.aobp.blockchain.waves.{Sign, SignCreator, WavesBlockChain}
+import ru.tolsi.aobp.blockchain.waves.{Sign, DataForSignCreator, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.transaction.{WavesSignedTransaction, WavesTransaction}
 
-private[signer] class WavesBlockSignCreator(signedTransactionsSerializer: BytesSerializer[Seq[WavesSignedTransaction[WavesTransaction]]]) extends SignCreator[WavesBlock] {
-  override def createSign(block: WavesBlock): Sign[WavesBlock] = {
+private[signer] class WavesBlockDataForSignCreator(signedTransactionsSerializer: BytesSerializer[Seq[WavesSignedTransaction[WavesTransaction]]]) extends DataForSignCreator[WavesBlock] {
+  override def createDataForSign(block: WavesBlock): Sign[WavesBlock] = {
     val txBytes: Array[Byte] = signedTransactionsSerializer.serialize(block.transactions)
     val txBytesWithSize = Bytes.ensureCapacity(Ints.toByteArray(txBytes.length), 4, 0) ++ txBytes
 

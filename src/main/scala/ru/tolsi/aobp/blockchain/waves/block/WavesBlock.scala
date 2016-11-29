@@ -5,7 +5,7 @@ import ru.tolsi.aobp.blockchain.waves._
 import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 
 
-abstract class WavesBlock extends WithSign with Signable with Validable with StateChangeReason with BytesSerializable {
+abstract class WavesBlock extends Signable with Validable with StateChangeReason with BytesSerializable {
   type Id = Signature64
 
   def version: Byte
