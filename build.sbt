@@ -2,38 +2,37 @@ name := "aobp"
 
 version := "0.0.1"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.0"
 
-scalacOptions in Universal ++= Seq("-unchecked", "-deprecation", "-notailcalls")
+scalacOptions in Universal ++= Seq("-unchecked", "-deprecation", "-notailcalls", "-Xfatal-warnings")
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-contrib" % "2.4.+",
   "com.typesafe.akka" %% "akka-slf4j" % "2.4.+",
   "io.reactivex" %% "rxscala" % "0.26.+",
-  "org.scala-lang.modules" %% "scala-async" % "0.9.5",
+  "org.scala-lang.modules" %% "scala-async" % "0.9.6",
 
   "io.dropwizard.metrics" % "metrics-core" % "3.1.+",
   "io.dropwizard.metrics" % "metrics-jvm" % "3.1.+",
   "org.coursera" % "dropwizard-metrics-datadog" % "1.1.+",
 
   "com.google.guava" % "guava" % "20.0",
-  "com.esotericsoftware" % "kryo" % "4.0.0",
-  "com.twitter" %% "chill" % "0.8.0",
   "com.typesafe" % "config" % "1.3.+",
   "com.h2database" % "h2-mvstore" % "1.+",
   "ch.qos.logback" % "logback-classic" % "1.+",
   "ch.qos.logback" % "logback-core" % "1.+",
-  "com.typesafe.play" %% "play-json" % "2.5.9",
+  // todo update to 2.12 asap
+  "com.typesafe.play" % "play-json_2.11" % "2.5.9",
 
-  "org.consensusresearch" %% "scrypto" % "1.2.0-RC3" exclude("com.typesafe.play", "play-json_2.11"),
+  "org.consensusresearch" % "scrypto_2.11" % "1.2.0-RC3" exclude("com.typesafe.play", "play-json_2.11"),
   "commons-net" % "commons-net" % "3.+",
 
-  "com.typesafe.akka" %% "akka-http-experimental" % "2.4.8",
+  "com.typesafe.akka" %% "akka-http" % "10.0.+",
 
   "com.typesafe.akka" %% "akka-testkit" % "2.4.+" % "test",
-  "org.scalatest" %% "scalatest" % "2.+" % "test",
-  "org.scalactic" %% "scalactic" % "2.+" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.12.+" % "test"
+  "org.scalatest" %% "scalatest" % "3.+" % "test",
+  "org.scalactic" %% "scalactic" % "3.+" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.13.+" % "test"
 )
 
 javaOptions in Universal ++= Seq(
