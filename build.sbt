@@ -4,6 +4,7 @@ version := "0.0.1"
 
 scalaVersion := "2.12.0"
 
+// todo use "-g:notailcalls" only for dev
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-g:notailcalls", "-Xfatal-warnings", "-deprecation")
 
 libraryDependencies ++= Seq(
@@ -24,6 +25,7 @@ libraryDependencies ++= Seq(
   // todo update to 2.12 asap
   "com.typesafe.play" % "play-json_2.11" % "2.5.9",
 
+  // todo update to 2.12 asap
   "org.consensusresearch" % "scrypto_2.11" % "1.2.0-RC3" exclude("com.typesafe.play", "play-json_2.11"),
   "commons-net" % "commons-net" % "3.+",
 
@@ -35,6 +37,7 @@ libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.13.+" % "test"
 )
 
+// todo pick packaging sbt script from original waves project
 javaOptions in Universal ++= Seq(
   "-J-server",
   // tapiki 1 server only free
