@@ -1,7 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
-import ru.tolsi.aobp.blockchain.waves.{TransactionValidationError, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.transaction._
+import ru.tolsi.aobp.blockchain.waves.transaction.validator.error.WrongState
+import ru.tolsi.aobp.blockchain.waves.{TransactionValidationError, WavesBlockChain}
 
 private[validator] class UnsignedTransactionValidator extends TransactionValidator[WavesTransaction] {
   private def implicitlyValidate[TX <: WavesTransaction](tx: TX)(implicit wbc: WavesBlockChain, validator: TransactionValidator[TX]): Either[Seq[TransactionValidationError[WavesTransaction]], WavesTransaction] = {
@@ -18,14 +19,12 @@ private[validator] class UnsignedTransactionValidator extends TransactionValidat
       case tx: ReissueTransaction => implicitlyValidate(tx)
       case tx: TransferTransaction => implicitlyValidate(tx)
     }
-    // todo
-    //    txValidation.right.flatMap(t => {
-    //      if (wbc.stateStorage.isLeadToValidState(t)) {
-    //        Right(t)
-    //      } else {
-    //        Left(Seq(new WrongState("Transaction lead to invalid state")))
-    //      }
-    //    })
-    ???
+    txValidation.right.flatMap(t => {
+      if (wbc.stateStorage.isLeadToValidState(t)) {
+        Right(t)
+      } else {
+        Left(Seq(new WrongState("Transaction lead to invalid state")))
+      }
+    })
   }
 }
