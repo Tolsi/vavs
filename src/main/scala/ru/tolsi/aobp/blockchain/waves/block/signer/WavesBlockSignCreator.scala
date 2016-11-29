@@ -4,9 +4,9 @@ import com.google.common.primitives.{Bytes, Ints, Longs}
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer
 import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
 import ru.tolsi.aobp.blockchain.waves.{Sign, SignCreator, WavesBlockChain}
-import ru.tolsi.aobp.blockchain.waves.transaction.{SignedTransaction, WavesTransaction}
+import ru.tolsi.aobp.blockchain.waves.transaction.{WavesSignedTransaction, WavesTransaction}
 
-private[signer] class WavesBlockSignCreator(implicit signedTransactionsSerializer: BytesSerializer[Seq[SignedTransaction[WavesTransaction]]]) extends SignCreator[WavesBlock] {
+private[signer] class WavesBlockSignCreator(signedTransactionsSerializer: BytesSerializer[Seq[WavesSignedTransaction[WavesTransaction]]]) extends SignCreator[WavesBlock] {
   override def createSign(block: WavesBlock): Sign[WavesBlock] = {
     val txBytes: Array[Byte] = signedTransactionsSerializer.serialize(block.transactions)
     val txBytesWithSize = Bytes.ensureCapacity(Ints.toByteArray(txBytes.length), 4, 0) ++ txBytes

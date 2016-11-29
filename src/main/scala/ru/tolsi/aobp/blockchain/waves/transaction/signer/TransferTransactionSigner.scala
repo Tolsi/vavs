@@ -1,13 +1,12 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.signer
 
-import org.whispersystems.curve25519.Curve25519
-import ru.tolsi.aobp.blockchain.waves.transaction.{SignedTransaction, TransferTransaction}
+import ru.tolsi.aobp.blockchain.waves.transaction.{WavesSignedTransaction, TransferTransaction}
 import ru.tolsi.aobp.blockchain.waves.{SignCreator, Signature64, WavesBlockChain, WavesSigner}
 
-private[signer] class TransferTransactionSigner(implicit signCreator: SignCreator[TransferTransaction]) extends WavesSigner[TransferTransaction, SignedTransaction[TransferTransaction], Signature64] {
-  override def sign(tx: TransferTransaction)(implicit bc: WavesBlockChain): SignedTransaction[TransferTransaction] = {
-    val signature = new Signature64(Curve25519.getInstance(Curve25519.JAVA).calculateSignature(tx.sender.privateKey.get,
+private[signer] class TransferTransactionSigner(implicit signCreator: SignCreator[TransferTransaction]) extends WavesSigner[TransferTransaction, WavesSignedTransaction[TransferTransaction], Signature64] {
+  override def sign(tx: TransferTransaction)(implicit bc: WavesBlockChain): WavesSignedTransaction[TransferTransaction] = {
+    val signature = new Signature64(curve25519.calculateSignature(tx.sender.privateKey.get,
       signCreator.createSign(tx).value))
-    SignedTransaction(tx, signature)
+    WavesSignedTransaction(tx, signature)
   }
 }

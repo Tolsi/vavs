@@ -8,5 +8,5 @@ package object signer {
   private[signer] implicit val issueTransactionSigner = new IssueTransactionSigner
   private[signer] implicit val reissueTransactionSigner = new ReissueTransactionSigner
   private[signer] implicit val transferTransactionSigner = new TransferTransactionSigner
-  implicit val wavesTransactionSigner = new WavesTransactionSigner
+  val wavesTransactionSigner = new WavesTransactionSigner
 }

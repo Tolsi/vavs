@@ -1,10 +1,10 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.validator
 
+import ru.tolsi.aobp.blockchain.waves.{TransactionValidationError, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.transaction._
-import ru.tolsi.aobp.blockchain.waves.{TransactionValidationError, TransactionValidator, WavesBlockChain}
 
 private[validator] class UnsignedTransactionValidator extends TransactionValidator[WavesTransaction] {
-  private def implicitlyValidate[TX <: WavesTransaction](tx: TX)(implicit wbc: WavesBlockChain, validator: AbstractTransactionValidator[TX]): Either[Seq[TransactionValidationError[WavesTransaction]], WavesTransaction] = {
+  private def implicitlyValidate[TX <: WavesTransaction](tx: TX)(implicit wbc: WavesBlockChain, validator: TransactionValidator[TX]): Either[Seq[TransactionValidationError[WavesTransaction]], WavesTransaction] = {
     validator.validate(tx)
   }
 

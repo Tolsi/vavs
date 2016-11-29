@@ -21,7 +21,7 @@ abstract class WavesBlock extends WithSign with Signable with Validable with Sta
 
   def fee: WavesMoney[Either[Waves.type, Asset]]
 
-  def transactions: Seq[ST[WavesTransaction]]
+  def transactions: Seq[SignedTransaction[WavesTransaction]]
 
   def generator: Account
 }

@@ -6,7 +6,7 @@ import ru.tolsi.aobp.blockchain.waves.transaction.validator.error.{WrongAssetDec
 
 import scala.util.{Left, Right}
 
-private[validator] class IssueTransactionValidator extends AbstractTransactionValidator[IssueTransaction] {
+private[validator] class IssueTransactionValidator extends TransactionValidator[IssueTransaction] {
   val MaxDescriptionLength = 1000
   val MaxAssetNameLength = 16
   val MinAssetNameLength = 4
@@ -49,18 +49,5 @@ private[validator] class IssueTransactionValidator extends AbstractTransactionVa
     } else None
   }
 
-  override def validate(tx: IssueTransaction)(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesTransaction]], IssueTransaction] = {
-    val errors = Seq(
-      addressValidation(tx.recipient),
-      smallFeeValidation(tx.fee),
-      maxAssetNameLength(tx.name),
-      minAssetNameLength(tx.name),
-      maxDescriptorNameLength(tx.description),
-      negativeDecimals(tx.decimals),
-      maxDecimals(tx.decimals),
-      negativeAmountValidation(tx.quantity),
-      overflowValidation(tx.issue, tx.feeMoney)
-    ).flatten
-    if (errors.nonEmpty) Left(errors) else Right(tx)
-  }
+  override def validate(tx: IssueTransaction)(implicit bc: WavesBlockChain): ResultT = ???
 }

@@ -1,6 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves.block
 
-import ru.tolsi.aobp.blockchain.waves.transaction.{SignedTransaction, WavesTransaction}
+import ru.tolsi.aobp.blockchain.waves.transaction.{WavesSignedTransaction, WavesTransaction}
 import ru.tolsi.aobp.blockchain.waves._
 
 case class GenesisBlock(timestamp: Long,
@@ -9,7 +9,7 @@ case class GenesisBlock(timestamp: Long,
                         generator: Account,
                         generationSignature: Signature32,
                         fee: WavesMoney[Either[Waves.type, Asset]],
-                        transactions: Seq[SignedTransaction[WavesTransaction]]
+                        transactions: Seq[WavesSignedTransaction[WavesTransaction]]
                        ) extends WavesBlock {
   val version: Byte = 2
 }
