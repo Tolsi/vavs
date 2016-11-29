@@ -6,13 +6,10 @@ import ru.tolsi.aobp.blockchain.waves.transaction.validator.error.WrongTimestamp
 
 import scala.util.{Left, Right}
 
-private[waves] class SignedTransactionWithTimeValidator(timestamp: Long)
-                                                       (implicit signer: Signer[WavesTransaction, ST[WavesTransaction], Signature64],
-                                                        txValidator: TransactionValidator[WavesTransaction],
-                                                        signedTxValidator: AbstractSignedTransactionValidator[WavesTransaction, ST[WavesTransaction]])
-  extends AbstractSignedTransactionWithTimeValidator[ST[WavesTransaction]](timestamp) {
+private[waves] class SignedTransactionWithTimeValidators(timestamp: Long, signer: Signer[WavesTransaction, SignedTransaction[WavesTransaction], Signature64])(implicit txValidator: TransactionValidator[WavesTransaction], signedTxValidator: AbstractSignedTransactionValidator[WavesTransaction, SignedTransaction[WavesTransaction]])
+  extends AbstractSignedTransactionWithTimeValidator[SignedTransaction[WavesTransaction]](timestamp) {
 
-  private[waves] def timestampValidation(tx: ST[WavesTransaction], blockTimestamp: Long)(implicit wbc: WavesBlockChain): Option[WrongTimestamp] = {
+  private[waves] def timestampValidation(tx: SignedTransaction[WavesTransaction], blockTimestamp: Long)(implicit wbc: WavesBlockChain): Option[WrongTimestamp] = {
     if (tx.timestamp - blockTimestamp < wbc.configuration.maxTimeDriftMillis) {
       Some(new WrongTimestamp(s"Transaction is far away in future: ${tx.timestamp} - $blockTimestamp < ${wbc.configuration.maxTimeDriftMillis}"))
     } else if (blockTimestamp - tx.timestamp < wbc.configuration.maxTxAndBlockDiffMillis) {
@@ -20,7 +17,7 @@ private[waves] class SignedTransactionWithTimeValidator(timestamp: Long)
     } else None
   }
 
-  override def validate(stx: ST[WavesTransaction])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesTransaction]], WavesTransaction] = {
+  override def validate(stx: SignedTransaction[WavesTransaction])(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesTransaction]], WavesTransaction] = {
     signedTxValidator.validate(stx) match {
       case Left(errors) =>
         Left(errors)

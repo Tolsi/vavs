@@ -5,7 +5,7 @@ import ru.tolsi.aobp.blockchain.waves.transaction.{TransferTransaction, WavesTra
 
 import scala.util.{Left, Right}
 
-private[validator] class TransferTransactionValidator extends AbstractTransactionValidator[TransferTransaction] {
+private[validator] class TransferTransactionValidator extends TransactionValidator[TransferTransaction] {
   override def validate(tx: TransferTransaction)(implicit wbc: WavesBlockChain): Either[Seq[TransactionValidationError[WavesTransaction]], TransferTransaction] = {
     val errors = Seq(
       addressValidation(tx.recipient),

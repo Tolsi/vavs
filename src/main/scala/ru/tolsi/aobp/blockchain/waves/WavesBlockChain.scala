@@ -9,7 +9,6 @@ import ru.tolsi.aobp.blockchain.waves.transaction._
 import ru.tolsi.aobp.blockchain.waves.transaction.validator.{WavesTransactionValidationParameters, signedTransactionWithTimeValidator}
 import scorex.crypto.hash.Blake256
 
-//private[waves]
 abstract class WavesBlockChain {
 //  final type AC = Account
 //  final type AD = Address
@@ -26,9 +25,9 @@ abstract class WavesBlockChain {
 
   def genesis: WavesBlock
 
-  def txValidator(bvp: WavesTransactionValidationParameters): AbstractSignedTransactionValidator[WavesTransaction, SignedTransaction[WavesTransaction]] = signedTransactionWithTimeValidator(bvp.blockTimestamp)
+  def txValidator(bvp: WavesTransactionValidationParameters): AbstractSignedTransactionValidator[WavesTransaction, WavesSignedTransaction[WavesTransaction]] = signedTransactionWithTimeValidator(bvp.blockTimestamp)
 
-  def blockValidator: AbstractSignedBlockValidator[WavesBlock] = signedBlockValidator
+  def blockValidator: AbstractSignedBlockValidator[WavesBlock, WavesSignedBlock[WavesBlock]] = signedBlockValidator
 
 }
 

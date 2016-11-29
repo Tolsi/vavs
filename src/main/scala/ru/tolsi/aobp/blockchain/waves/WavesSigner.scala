@@ -1,6 +1,7 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import com.google.common.primitives.Shorts
-import ru.tolsi.aobp.blockchain.base._
+import org.whispersystems.curve25519.Curve25519
 
-abstract class WavesSigner[S <: Signable with WithSign, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] extends Signer[S, SV, SI]
+abstract class WavesSigner[S <: Signable with WithSign, SV <: Signed[S, SI], SI <: Signature[Array[Byte]]] extends Signer[S, SV, SI] {
+  protected val curve25519 = Curve25519.getInstance(Curve25519.JAVA)
+}

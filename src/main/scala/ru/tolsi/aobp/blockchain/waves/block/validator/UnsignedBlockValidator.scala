@@ -3,10 +3,11 @@ package ru.tolsi.aobp.blockchain.waves.block.validator
 import ru.tolsi.aobp.blockchain.waves.{AbstractBlockValidator, BlockValidationError, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.block.validator.error.{WrongState, WrongTransaction, WrongTransactionsOrder}
 import ru.tolsi.aobp.blockchain.waves.block.{BaseBlock, GenesisBlock, WavesBlock}
-import ru.tolsi.aobp.blockchain.waves.transaction.validator.SignedTransactionWithTimeValidator
+import ru.tolsi.aobp.blockchain.waves.transaction.validator.SignedTransactionWithTimeValidators
 import ru.tolsi.aobp.blockchain.waves.transaction.transactionsOrdering
+import ru.tolsi.aobp.blockchain.waves.block.validator._
 
-class UnsignedBlockValidator(tv: Long => SignedTransactionWithTimeValidator) extends AbstractBlockValidator[WavesBlock] {
+class UnsignedBlockValidator(tv: Long => SignedTransactionWithTimeValidators) extends AbstractBlockValidator[WavesBlock] {
   private def implicitlyValidate[BL <: WavesBlock](b: BL)(implicit wbc: WavesBlockChain, validator: AbstractBlockValidator[BL]): validator.ResultT = {
     validator.validate(b)
   }
