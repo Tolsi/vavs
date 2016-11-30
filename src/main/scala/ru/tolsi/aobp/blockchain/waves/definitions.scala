@@ -1,6 +1,8 @@
 package ru.tolsi.aobp.blockchain.waves
 
+import com.google.common.primitives.{Bytes, Ints}
 import ru.tolsi.aobp.blockchain.base.LyHash
+import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer
 import ru.tolsi.aobp.blockchain.waves.block.{WavesBlock, WavesSignedBlock}
 import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 import rx.Observable
@@ -8,11 +10,7 @@ import scorex.crypto.encode.Base58
 
 case class BalanceAccount(address: Address, currency: WavesСurrency)
 
-case class Sign[+WS <: Signable](value: Array[Byte])
-
-trait DataForSignCreator[WS <: Signable] {
-  def createDataForSign(ws: WS): Sign[WS]
-}
+trait DataForSignCreator[WS <: Signable] extends BytesSerializer[WS]
 
 trait Signable
 

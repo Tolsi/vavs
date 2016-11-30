@@ -16,7 +16,6 @@ abstract class WavesBlock extends Signable with Validable with StateChangeReason
 
   def baseTarget: Long
 
-  // fasthash(lastBlockData.generationSignature ++ generator.publicKey)
   def generationSignature: Signature32
 
   def fee: WavesMoney[Either[Waves.type, Asset]]

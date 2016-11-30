@@ -1,11 +1,13 @@
 package ru.tolsi.aobp.blockchain.base.bytes
 
-import com.google.common.primitives.{Bytes, Ints}
+import com.google.common.primitives.{Bytes, Ints, Longs}
 
 trait BytesSerializable
 
 trait BytesSerializer[BS] {
   def serialize(obj: BS): Array[Byte]
+  protected def intBytesEnsureCapacity(i: Int): Array[Byte] = Bytes.ensureCapacity(Ints.toByteArray(i), 4, 0)
+  protected def longBytesEnsureCapacity(l: Long): Array[Byte] = Bytes.ensureCapacity(Longs.toByteArray(l), 8, 0)
 }
 
 class SeqBytesSerializer[BS <: BytesSerializable](implicit bs: BytesSerializer[BS]) extends BytesSerializer[Seq[BS]] {

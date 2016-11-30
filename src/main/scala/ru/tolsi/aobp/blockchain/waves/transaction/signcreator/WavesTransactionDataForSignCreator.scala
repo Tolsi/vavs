@@ -1,16 +1,15 @@
 package ru.tolsi.aobp.blockchain.waves.transaction.signcreator
 
-import ru.tolsi.aobp.blockchain.base._
-import ru.tolsi.aobp.blockchain.waves.{Sign, DataForSignCreator, WavesBlockChain}
+import ru.tolsi.aobp.blockchain.waves.DataForSignCreator
 import ru.tolsi.aobp.blockchain.waves.transaction._
 
 
 private[waves] class WavesTransactionDataForSignCreator extends DataForSignCreator[WavesTransaction] {
-  private def implicitlyCreateSign[TX <: WavesTransaction](tx: TX)(implicit signCreator: DataForSignCreator[TX]): Sign[TX] = {
-    signCreator.createDataForSign(tx)
+  private def implicitlyCreateSign[TX <: WavesTransaction](tx: TX)(implicit dataForSignCreator: DataForSignCreator[TX]): Array[Byte] = {
+    dataForSignCreator.serialize(tx)
   }
 
-  override def createDataForSign(tx: WavesTransaction): Sign[WavesTransaction] = {
+  override def serialize(tx: WavesTransaction): Array[Byte] = {
     tx match {
       case tx: GenesisTransaction => implicitlyCreateSign(tx)
       case tx: PaymentTransaction => implicitlyCreateSign(tx)

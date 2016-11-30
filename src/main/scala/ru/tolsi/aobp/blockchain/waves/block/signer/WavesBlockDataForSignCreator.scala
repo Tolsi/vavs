@@ -1,25 +1,24 @@
 package ru.tolsi.aobp.blockchain.waves.block.signer
 
-import com.google.common.primitives.{Bytes, Ints, Longs}
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer
+import ru.tolsi.aobp.blockchain.waves.DataForSignCreator
 import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
-import ru.tolsi.aobp.blockchain.waves.{Sign, DataForSignCreator, WavesBlockChain}
 import ru.tolsi.aobp.blockchain.waves.transaction.{WavesSignedTransaction, WavesTransaction}
 
-private[signer] class WavesBlockDataForSignCreator(signedTransactionsSerializer: BytesSerializer[Seq[WavesSignedTransaction[WavesTransaction]]]) extends DataForSignCreator[WavesBlock] {
-  override def createDataForSign(block: WavesBlock): Sign[WavesBlock] = {
-    val txBytes: Array[Byte] = signedTransactionsSerializer.serialize(block.transactions)
-    val txBytesWithSize = Bytes.ensureCapacity(Ints.toByteArray(txBytes.length), 4, 0) ++ txBytes
+private[block] class WavesBlockDataForSignCreator(signedTransactionsSerializer: BytesSerializer[Seq[WavesSignedTransaction[WavesTransaction]]]) extends DataForSignCreator[WavesBlock] {
+  override def serialize(block: WavesBlock): Array[Byte] = {
+    val txBytes = signedTransactionsSerializer.serialize(block.transactions)
+    val txBytesWithSize = intBytesEnsureCapacity(txBytes.length) ++ txBytes
 
-    val consensusBytes = Bytes.ensureCapacity(Longs.toByteArray(block.baseTarget), 8, 0) ++
+    val consensusBytes = longBytesEnsureCapacity(block.baseTarget) ++
       block.generationSignature.value
-    val consensusBytesWithSize = Bytes.ensureCapacity(Ints.toByteArray(consensusBytes.length), 4, 0) ++ consensusBytes
+    val consensusBytesWithSize = intBytesEnsureCapacity(consensusBytes.length) ++ consensusBytes
 
-    Sign(Array(block.version) ++
-      Bytes.ensureCapacity(Longs.toByteArray(block.timestamp), 8, 0) ++
+    Array(block.version) ++
+      longBytesEnsureCapacity(block.timestamp) ++
       block.reference.value ++
       consensusBytesWithSize ++
       txBytesWithSize ++
-      block.generator.publicKey)
+      block.generator.publicKey
   }
 }
