@@ -5,5 +5,5 @@ import ru.tolsi.aobp.blockchain.waves.block.WavesBlock
 import ru.tolsi.aobp.blockchain.waves.network.transport.NetworkMessage
 
 case class Block(block: SignedBlock[WavesBlock]) extends NetworkMessage {
-  override def contentId: Byte = 0x17
+  override val contentId: Byte = 0x17
 }
