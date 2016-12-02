@@ -6,7 +6,9 @@ import ru.tolsi.aobp.blockchain.waves._
 abstract class WavesTransaction extends Signable with Validable with StateChangeReason with BytesSerializable {
   def typeId: TransactionType.Value
 
-  val recipient: Address
+  def recipient: Address
+
+  def sender: Account
 
   def timestamp: Long
 

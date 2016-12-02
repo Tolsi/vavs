@@ -20,4 +20,6 @@ case class WavesSignedTransaction[+TX <: WavesTransaction](tx: TX, signature: Si
   override val fee: Long = tx.fee
 
   override val feeCurrency: WavesСurrency = tx.feeCurrency
+
+  override def sender: Account = tx.sender
 }
