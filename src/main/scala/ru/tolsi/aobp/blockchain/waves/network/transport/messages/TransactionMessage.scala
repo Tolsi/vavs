@@ -4,9 +4,9 @@ import ru.tolsi.aobp.blockchain.waves.SignedTransaction
 import ru.tolsi.aobp.blockchain.waves.network.transport.NetworkMessage
 import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 
-object Transaction {
+object TransactionMessage {
   final val ContentId: Byte = 0x19
 }
-case class Transaction(tx: SignedTransaction[WavesTransaction]) extends NetworkMessage {
-  override val contentId: Byte = Transaction.ContentId
+case class TransactionMessage(tx: SignedTransaction[WavesTransaction]) extends NetworkMessage {
+  override val contentId: Byte = TransactionMessage.ContentId
 }
