@@ -12,16 +12,11 @@ class TransactionMessageSerializer(signedTransactionSerializer: BytesSerializer[
   extends NetworkMessageSerializer[TransactionMessage] {
   override def serialize(transaction: TransactionMessage): Array[Byte] = {
     val magicBytes = NetworkMessage.MagicBytes
-
     val contentId = transaction.contentId
-
     val txBytes = signedTransactionSerializer.serialize(transaction.tx)
     val txBytesLength = txBytes.length
-
     val payloadChecksum = calculateDataChecksum(txBytes)
-
     val packetLength = 17 + txBytesLength
-
     Bytes.concat(
       intBytesEnsureCapacity(packetLength),
       magicBytes,

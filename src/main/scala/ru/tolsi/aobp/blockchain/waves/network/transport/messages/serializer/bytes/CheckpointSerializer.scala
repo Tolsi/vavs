@@ -9,14 +9,10 @@ class CheckpointSerializer extends NetworkMessageSerializer[Checkpoint] {
   override def serialize(checkpoint: Checkpoint): Array[Byte] = {
     val magicBytes = NetworkMessage.MagicBytes
     val contentId = checkpoint.contentId
-
-    val payload = Bytes.concat(Ints.toByteArray(checkpoint.checkpoints.size), checkpoint.checkpoints.foldLeft(Array.empty[Byte]) { case (bs, (height, blockSignature)) =>
-      Bytes.concat(bs, longBytesEnsureCapacity(height), blockSignature.value)
-    })
-
+    val payload = Bytes.concat(Ints.toByteArray(checkpoint.checkpoints.size), checkpoint.checkpoints
+      .foldLeft(Array.empty[Byte]) { case (bs, (height, blockSignature)) => Bytes.concat(bs, longBytesEnsureCapacity(height), blockSignature.value)})
     val packageLength = 17
     val packageChecksum = calculateDataChecksum(payload)
-
     Bytes.concat(
       intBytesEnsureCapacity(packageLength),
       magicBytes,
