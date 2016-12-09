@@ -1,6 +1,6 @@
 package ru.tolsi.aobp.blockchain.waves
 
-import ru.tolsi.aobp.blockchain.waves.crypto.ScorexHashChain
+import ru.tolsi.aobp.blockchain.waves.crypto.SecureHashChain
 import scorex.crypto.encode.Base58
 import scorex.crypto.signatures.Curve25519
 
@@ -11,14 +11,14 @@ object Account {
   private[waves] val ChecksumLength = 4
   private[waves] val HashLength = 20
 
-  private[waves] def calcCheckSum(withoutChecksum: Array[Byte]): Array[Byte] = ScorexHashChain.hash(withoutChecksum).take(ChecksumLength)
+  private[waves] def calcCheckSum(withoutChecksum: Array[Byte]): Array[Byte] = SecureHashChain.hash(withoutChecksum).take(ChecksumLength)
 
   def apply(keyPair: (PrivateKey, PublicKey))(implicit wbc: WavesBlockChain): Account = this (keyPair._2, Some(keyPair._1))
 
   def apply(seed: Array[Byte])(implicit wbc: WavesBlockChain): Account = this (Curve25519.createKeyPair(seed))
 
   def addressFromPublicKey(publicKey: Array[Byte])(implicit wbc: WavesBlockChain): Array[Byte] = {
-    val publicKeyHash = wbc.secureHash.hash(publicKey).take(HashLength)
+    val publicKeyHash = SecureHashChain.hash(publicKey).take(HashLength)
     val withoutChecksum = AddressVersion +: wbc.configuration.chainId +: publicKeyHash
     withoutChecksum ++ calcCheckSum(withoutChecksum)
   }
