@@ -3,12 +3,13 @@ package ru.tolsi.aobp.blockchain.waves.network.transport.messages.serializer.byt
 import com.google.common.primitives.Bytes
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer._
+import ru.tolsi.aobp.blockchain.waves.SignedTransaction
 import ru.tolsi.aobp.blockchain.waves.network.transport.NetworkMessage
 import ru.tolsi.aobp.blockchain.waves.network.transport.messages.TransactionMessage
 import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
-import ru.tolsi.aobp.blockchain.waves.{SignedTransaction, WavesBlockChain}
 
-class TransactionMessageSerializer(signedTransactionSerializer: BytesSerializer[SignedTransaction[WavesTransaction]])(implicit wbc: WavesBlockChain) extends NetworkMessageBytesSerializer[TransactionMessage] {
+class TransactionMessageSerializer(signedTransactionSerializer: BytesSerializer[SignedTransaction[WavesTransaction]])
+  extends NetworkMessageSerializer[TransactionMessage] {
   override def serialize(transaction: TransactionMessage): Array[Byte] = {
     val magicBytes = NetworkMessage.MagicBytes
 

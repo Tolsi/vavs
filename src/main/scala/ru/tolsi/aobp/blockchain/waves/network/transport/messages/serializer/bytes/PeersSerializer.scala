@@ -2,11 +2,10 @@ package ru.tolsi.aobp.blockchain.waves.network.transport.messages.serializer.byt
 
 import com.google.common.primitives.{Bytes, Ints}
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer._
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
 import ru.tolsi.aobp.blockchain.waves.network.transport.NetworkMessage
 import ru.tolsi.aobp.blockchain.waves.network.transport.messages.Peers
 
-class PeersSerializer(implicit wbc: WavesBlockChain) extends NetworkMessageBytesSerializer[Peers] {
+class PeersSerializer extends NetworkMessageSerializer[Peers] {
   override def serialize(peers: Peers): Array[Byte] = {
     val magicBytes = NetworkMessage.MagicBytes
     val contentId = peers.contentId

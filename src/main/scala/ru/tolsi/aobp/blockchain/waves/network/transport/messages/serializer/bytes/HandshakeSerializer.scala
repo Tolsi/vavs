@@ -2,11 +2,11 @@ package ru.tolsi.aobp.blockchain.waves.network.transport.messages.serializer.byt
 
 import com.google.common.base.Charsets
 import com.google.common.primitives.Bytes
-import ru.tolsi.aobp.blockchain.waves.network.transport.messages.Handshake
+import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer
 import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer._
-import ru.tolsi.aobp.blockchain.waves.WavesBlockChain
+import ru.tolsi.aobp.blockchain.waves.network.transport.messages.Handshake
 
-class HandshakeSerializer(implicit wbc: WavesBlockChain) extends NetworkMessageBytesSerializer[Handshake] {
+class HandshakeSerializer extends BytesSerializer[Handshake] {
   override def serialize(handshake: Handshake): Array[Byte] = {
     val applicationName = handshake.applicationName.getBytes(Charsets.UTF_8)
 

@@ -5,7 +5,7 @@ import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer.intBytesEnsureCapacit
 import ru.tolsi.aobp.blockchain.waves.network.transport.NetworkMessage
 import ru.tolsi.aobp.blockchain.waves.network.transport.messages.GetSignatures
 
-class GetBlocksSignaturesSerializer extends NetworkMessageBytesSerializer[GetSignatures] {
+class GetBlocksSignaturesSerializer extends NetworkMessageSerializer[GetSignatures] {
   override def serialize(getSignatures: GetSignatures): Array[Byte] = {
     val magicBytes = NetworkMessage.MagicBytes
 
