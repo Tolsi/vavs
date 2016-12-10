@@ -10,19 +10,23 @@ import ru.tolsi.aobp.blockchain.waves.network.transport.messages.Block
 
 class BlockMessageSerializer(signedBlockSerializer: BytesSerializer[SignedBlock[WavesBlock]]) extends NetworkMessageSerializer[Block] {
   override def serialize(blockMessage: Block): Array[Byte] = {
+    val blockBytes = signedBlockSerializer.serialize(blockMessage.block)
     val magicBytes = NetworkMessage.MagicBytes
     val contentId = blockMessage.contentId
-    val blockBytes = signedBlockSerializer.serialize(blockMessage.block)
+
     val blockBytesLength = blockBytes.length
-    val payloadChecksum = calculateDataChecksum(blockBytes)
+    val blockBytesWithLength = Bytes.concat(intBytesEnsureCapacity(blockBytesLength), blockBytes)
+    val payloadLength = blockBytesWithLength.length
+    val payloadChecksum = calculateDataChecksum(blockBytesWithLength)
     val packetLength = 17 + blockBytesLength
     Bytes.concat(
       intBytesEnsureCapacity(packetLength),
       magicBytes,
       Array(contentId),
-      intBytesEnsureCapacity(blockBytesLength),
+      intBytesEnsureCapacity(payloadLength),
+      // todo check docs
       payloadChecksum,
-      blockBytes
+      blockBytesWithLength
     )
   }
 }

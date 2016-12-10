@@ -11,9 +11,10 @@ import ru.tolsi.aobp.blockchain.waves.transaction.WavesTransaction
 class TransactionMessageSerializer(signedTransactionSerializer: BytesSerializer[SignedTransaction[WavesTransaction]])
   extends NetworkMessageSerializer[TransactionMessage] {
   override def serialize(transaction: TransactionMessage): Array[Byte] = {
+    val txBytes = signedTransactionSerializer.serialize(transaction.tx)
     val magicBytes = NetworkMessage.MagicBytes
     val contentId = transaction.contentId
-    val txBytes = signedTransactionSerializer.serialize(transaction.tx)
+
     val txBytesLength = txBytes.length
     val payloadChecksum = calculateDataChecksum(txBytes)
     val packetLength = 17 + txBytesLength

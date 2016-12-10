@@ -9,11 +9,8 @@ class BlocksSignaturesSerializer extends NetworkMessageSerializer[BlocksSignatur
   override def serialize(blocksSignatures: BlocksSignatures): Array[Byte] = {
     val magicBytes = NetworkMessage.MagicBytes
     val contentId = blocksSignatures.contentId
-    val payload =
-      Bytes.concat(intBytesEnsureCapacity(blocksSignatures.signatures.size),
-        blocksSignatures.signatures.foldLeft(Array.empty[Byte]) { case (bytes, signature) =>
-          Bytes.concat(bytes, signature.value)
-        })
+    val payload = Bytes.concat(intBytesEnsureCapacity(blocksSignatures.signatures.size), blocksSignatures.signatures
+      .foldLeft(Array.empty[Byte]) { case (bytes, signature) => Bytes.concat(bytes, signature.value) })
     val payloadLength = intBytesEnsureCapacity(payload.length)
     val payloadChecksum = calculateDataChecksum(payload)
     val packageLength = 17 + blocksSignatures.signatures.size * 64
