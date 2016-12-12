@@ -2,16 +2,21 @@ name := "aobp"
 
 version := "0.0.1"
 
-scalaVersion := "2.12.0"
+scalaVersion := "2.12.1"
+
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3" cross CrossVersion.binary)
 
 // todo use "-g:notailcalls" only for dev
-scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-g:notailcalls", "-Xfatal-warnings", "-deprecation")
+scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-g:notailcalls", "-Xfatal-warnings", "-Ypartial-unification", "-feature", "-language:higherKinds")
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-contrib" % "2.4.+",
   "com.typesafe.akka" %% "akka-slf4j" % "2.4.+",
   "io.reactivex" %% "rxscala" % "0.26.+",
   "org.scala-lang.modules" %% "scala-async" % "0.9.6",
+  "org.scalatest" %% "scalatest" % "3.0.0",
+  "org.typelevel" %% "cats" % "0.8.1",
+  "com.github.nscala-time" %% "nscala-time" % "2.14.0",
 
   "io.dropwizard.metrics" % "metrics-core" % "3.1.+",
   "io.dropwizard.metrics" % "metrics-jvm" % "3.1.+",
@@ -26,7 +31,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" % "play-json_2.11" % "2.5.9",
 
   // todo update to 2.12 asap
-  "org.consensusresearch" % "scrypto_2.11" % "1.2.0-RC3" exclude("com.typesafe.play", "play-json_2.11"),
+  "org.consensusresearch" %% "scrypto" % "1.2.0-RC3" exclude("com.typesafe.play", "play-json_2.11"),
   "commons-net" % "commons-net" % "3.+",
 
   "com.typesafe.akka" %% "akka-http" % "10.0.+",
@@ -111,5 +116,6 @@ javaOptions in Universal ++= {
 bashScriptExtraDefines += s"""addJava "-XX:HeapDumpPath=/var/log/${packageName.value}/oom_heap_dump_started_`date`.hprof""""
 
 import com.typesafe.sbt.packager.archetypes.systemloader._
+import sbt.Keys.libraryDependencies
 
 enablePlugins(JavaServerAppPackaging, JDebPackaging, SystemdPlugin)
