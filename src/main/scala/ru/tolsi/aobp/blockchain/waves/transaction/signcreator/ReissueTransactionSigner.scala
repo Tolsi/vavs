@@ -2,7 +2,7 @@ package ru.tolsi.aobp.blockchain.waves.transaction.signcreator
 
 import com.google.common.primitives.{Bytes, Longs}
 import ru.tolsi.aobp.blockchain.waves.DataForSignCreator
-import ru.tolsi.aobp.blockchain.waves.serializer.BytesUtils._
+import ru.tolsi.aobp.blockchain.base.bytes.BytesSerializer._
 import ru.tolsi.aobp.blockchain.waves.transaction.{ReissueTransaction, TransactionType}
 
 private[signcreator] class ReissueTransactionDataForSignCreator extends DataForSignCreator[ReissueTransaction] {
